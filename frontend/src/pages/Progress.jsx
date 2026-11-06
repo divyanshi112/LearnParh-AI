@@ -16,8 +16,8 @@ export default function Progress() {
     <DashboardLayout pageTitle="My Progress">
       <div className="space-y-6">
         {/* Banner */}
-        <div className="p-6 rounded-3xl bg-gradient-to-br from-dark-900 to-dark-850 border border-slate-800">
-          <h2 className="text-2xl font-bold text-white tracking-tight">Learning Analytics & Retention</h2>
+        <div className="p-6 rounded-xl bg-dark-900 border border-slate-800">
+          <h2 className="text-2xl font-semibold text-white tracking-tight">Learning Analytics & Retention</h2>
           <p className="text-slate-400 text-xs sm:text-sm mt-1 max-w-xl">
             Detailed breakdown of your study velocity, retention accuracy, and concept mastery over time.
           </p>
@@ -27,8 +27,8 @@ export default function Progress() {
         <WeeklyActivityChart />
 
         {/* Skill Mastery Breakdown */}
-        <div className="p-6 rounded-2xl bg-dark-900 border border-slate-800 shadow-xl">
-          <h3 className="text-base font-bold text-white mb-4">Topic Mastery Ratings</h3>
+        <div className="p-6 rounded-xl bg-dark-900 border border-slate-800">
+          <h3 className="text-base font-semibold text-white mb-4">Topic Mastery Ratings</h3>
           <div className="space-y-4">
             {skillsMastery.map((skill, i) => (
               <div key={i} className="space-y-1.5">
@@ -38,7 +38,7 @@ export default function Progress() {
                 </div>
                 <div className="w-full h-2 rounded-full bg-dark-950 border border-slate-800 overflow-hidden">
                   <div
-                    className="h-full rounded-full bg-gradient-to-r from-brand-purple to-brand-blue"
+                  className="h-full rounded-full bg-brand-blue"
                     style={{ width: `${skill.level}%` }}
                   />
                 </div>
@@ -50,4 +50,3 @@ export default function Progress() {
     </DashboardLayout>
   );
 }
-

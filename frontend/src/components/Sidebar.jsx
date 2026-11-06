@@ -11,14 +11,14 @@ import {
   GraduationCap,
   X,
   Flame,
-  ShieldCheck
+  LogOut
 } from 'lucide-react';
 import { studentProfile } from '../services/dashboardService';
 
 const navigationItems = [
-  { name: 'Dashboard', path: '/', icon: LayoutDashboard },
-  { name: 'My Study Plan', path: '/study-plan', icon: BookOpen, badge: 'Phase 3' },
-  { name: 'AI Tutor', path: '/ai-tutor', icon: Bot, badge: 'GenAI' },
+  { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
+  { name: 'My Study Plan', path: '/study-plan', icon: BookOpen },
+  { name: 'AI Tutor', path: '/ai-tutor', icon: Bot },
   { name: 'Practice Quizzes', path: '/quizzes', icon: CheckSquare },
   { name: 'My Progress', path: '/progress', icon: TrendingUp },
   { name: 'Settings', path: '/settings', icon: Settings },
@@ -29,17 +29,17 @@ export default function Sidebar({ mobileOpen, setMobileOpen }) {
   const navigate = useNavigate();
 
   const sidebarContent = (
-    <div className="flex flex-col h-full bg-dark-900 border-r border-slate-800/80">
+    <div className="flex flex-col h-full bg-[#141619] border-r border-slate-800">
       {/* Brand Header */}
       <div className="h-16 px-6 flex items-center justify-between border-b border-slate-800/80">
         <NavLink to="/" className="flex items-center space-x-3 group" onClick={() => setMobileOpen(false)}>
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-brand-purple to-brand-blue flex items-center justify-center shadow-glow-purple group-hover:scale-105 transition-transform">
+          <div className="w-9 h-9 rounded-lg bg-brand-blue flex items-center justify-center">
             <Sparkles className="w-5 h-5 text-white" />
           </div>
           <div>
             <div className="flex items-center space-x-1.5">
-              <span className="text-lg font-bold tracking-tight text-white">
-                LearnPath <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-purple-light to-brand-blue-light">AI</span>
+              <span className="text-lg font-semibold tracking-tight text-white">
+              LearnPath <span className="text-brand-blue-light">AI</span>
               </span>
             </div>
             <p className="text-[10px] text-slate-400 font-medium">Personalized Learning</p>
@@ -68,9 +68,9 @@ export default function Sidebar({ mobileOpen, setMobileOpen }) {
               key={item.path}
               to={item.path}
               onClick={() => setMobileOpen(false)}
-              className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 group ${isActive
-                ? 'bg-gradient-to-r from-purple-500/15 to-blue-500/10 text-white border border-purple-500/30 shadow-sm'
-                : 'text-slate-400 hover:text-slate-200 hover:bg-dark-800/60'
+              className={`flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-colors duration-150 group border-l-2 ${isActive
+                ? 'bg-dark-800 text-white border-brand-blue'
+                : 'text-slate-400 border-transparent hover:text-slate-200 hover:bg-dark-800/60'
                 }`}
             >
               <div className="flex items-center space-x-3">
@@ -78,10 +78,7 @@ export default function Sidebar({ mobileOpen, setMobileOpen }) {
                 <span>{item.name}</span>
               </div>
               {item.badge && (
-                <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${isActive
-                  ? 'bg-brand-purple/20 text-brand-purple-light border-brand-purple/40'
-                  : 'bg-dark-800 text-slate-400 border-slate-700/60'
-                  }`}>
+                <span className="text-[10px] font-semibold px-2 py-0.5 rounded border border-slate-700 text-slate-400">
                   {item.badge}
                 </span>
               )
@@ -93,8 +90,8 @@ export default function Sidebar({ mobileOpen, setMobileOpen }) {
 
       {/* Target Exam Deadline Widget */}
       <div className="px-4 pb-4">
-        <div className="p-3.5 rounded-xl bg-gradient-to-br from-dark-850 to-dark-950 border border-slate-800">
-          <div className="flex items-center space-x-2 text-xs font-semibold text-brand-purple-light mb-1">
+        <div className="p-3.5 rounded-lg bg-dark-900 border border-slate-800">
+          <div className="flex items-center space-x-2 text-xs font-semibold text-slate-300 mb-1">
             <GraduationCap className="w-4 h-4" />
             <span>Target Exam</span>
           </div>
@@ -107,13 +104,13 @@ export default function Sidebar({ mobileOpen, setMobileOpen }) {
       </div>
 
       {/* Student Profile Section */}
-      <div className="p-4 border-t border-slate-800/80 bg-dark-900/60">
-        <div className="flex items-center space-x-3 p-2 rounded-xl hover:bg-dark-800/50 transition-colors">
+      <div className="p-4 border-t border-slate-800">
+        <div className="flex items-center space-x-3 p-2 rounded-lg hover:bg-dark-800 transition-colors">
           <div className="relative">
-            <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-purple-600 to-blue-600 flex items-center justify-center text-white font-bold text-xs ring-2 ring-purple-500/30">
+            <div className="w-9 h-9 rounded-full bg-dark-700 flex items-center justify-center text-white font-semibold text-xs">
               AM
             </div>
-            <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-400 ring-2 ring-dark-900"></span>
+            <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-400 ring-2 ring-[#141619]"></span>
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-xs font-semibold text-white truncate">{studentProfile.name}</p>
@@ -135,7 +132,7 @@ export default function Sidebar({ mobileOpen, setMobileOpen }) {
             }}
             className="w-full flex items-center space-x-2 px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:text-white hover:bg-dark-800/60 transition-colors"
           >
-            <X className="w-4 h-4" />
+            <LogOut className="w-4 h-4" />
             <span>Logout</span>
           </button>
         </div>
@@ -156,7 +153,7 @@ export default function Sidebar({ mobileOpen, setMobileOpen }) {
           {/* Backdrop */}
           <div className="fixed inset-0 bg-black/70 backdrop-blur-sm transition-opacity" onClick={() => setMobileOpen(false)}></div>
           {/* Drawer Panel */}
-          <div className="relative w-72 max-w-[85vw] h-full z-10 animate-in slide-in-from-left duration-200">
+          <div className="relative w-72 max-w-[85vw] h-full z-10">
             {sidebarContent}
           </div>
         </div>

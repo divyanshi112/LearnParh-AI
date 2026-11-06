@@ -11,12 +11,7 @@ import {
 } from 'lucide-react';
 import { initialDailyGoals } from '../services/dashboardService';
 
-const categoryColors = {
-  Algorithms: 'bg-purple-500/10 text-brand-purple-light border-purple-500/20',
-  'Data Structures': 'bg-blue-500/10 text-brand-blue-light border-blue-500/20',
-  'Machine Learning': 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20',
-  Quizzes: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
-};
+const categoryColors = 'bg-dark-800 text-slate-400 border-slate-700';
 
 export default function DailyGoalsList() {
   const [goals, setGoals] = useState(initialDailyGoals);
@@ -57,7 +52,7 @@ export default function DailyGoalsList() {
   const isAllCompleted = totalGoals > 0 && completedGoals === totalGoals;
 
   return (
-    <div className="rounded-2xl border border-slate-800 bg-dark-900 shadow-xl p-5 sm:p-6 transition-all duration-300">
+    <div className="rounded-xl border border-slate-800 bg-dark-900 p-5 sm:p-6">
       {/* Header */}
       <div className="flex items-center justify-between pb-4 border-b border-slate-800/80">
         <div>
@@ -65,7 +60,7 @@ export default function DailyGoalsList() {
             <h3 className="text-base sm:text-lg font-bold text-white tracking-tight">
               Today's Learning Goals
             </h3>
-            <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+            <span className="text-[10px] font-medium px-2 py-0.5 rounded-md bg-dark-800 text-slate-400 border border-slate-700">
               Interactive
             </span>
           </div>
@@ -79,13 +74,13 @@ export default function DailyGoalsList() {
           <button
             onClick={resetGoals}
             title="Reset to default demo tasks"
-            className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-dark-800 border border-slate-800 transition-colors"
+            className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-dark-800 border border-slate-700 transition-colors"
           >
             <RotateCcw className="w-3.5 h-3.5" />
           </button>
           <button
             onClick={() => setIsAdding(!isAdding)}
-            className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-dark-800 hover:bg-dark-750 text-slate-200 border border-slate-700/80 hover:border-brand-purple/50 transition-all"
+            className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-dark-800 hover:bg-dark-700 text-slate-200 border border-slate-700 transition-colors"
           >
             <Plus className="w-3.5 h-3.5 text-brand-purple-light" />
             <span>Add Goal</span>
@@ -94,7 +89,7 @@ export default function DailyGoalsList() {
       </div>
 
       {/* Dynamic Progress Bar */}
-      <div className="mt-4 p-4 rounded-xl bg-dark-850/60 border border-slate-800/80">
+      <div className="mt-4 p-4 rounded-lg bg-dark-850 border border-slate-800">
         <div className="flex items-center justify-between text-xs mb-2">
           <div className="flex items-center space-x-2">
             <span className="font-semibold text-slate-200">Daily Progress</span>
@@ -113,7 +108,7 @@ export default function DailyGoalsList() {
         {/* Progress track */}
         <div className="w-full h-2.5 rounded-full bg-dark-950 overflow-hidden border border-slate-800/80">
           <div
-            className="h-full rounded-full bg-gradient-to-r from-brand-purple to-brand-blue transition-all duration-500 shadow-glow-purple"
+            className="h-full rounded-full bg-brand-blue transition-all duration-300"
             style={{ width: `${progressPct}%` }}
           />
         </div>
@@ -121,19 +116,19 @@ export default function DailyGoalsList() {
 
       {/* Inline Add Goal Form */}
       {isAdding && (
-        <form onSubmit={handleAddGoal} className="mt-4 p-3 rounded-xl bg-dark-850 border border-brand-purple/40 animate-in fade-in duration-200">
+        <form onSubmit={handleAddGoal} className="mt-4 p-3 rounded-lg bg-dark-850 border border-slate-700">
           <div className="flex items-center space-x-2">
             <input
               type="text"
               value={newGoalText}
               onChange={(e) => setNewGoalText(e.target.value)}
               placeholder="e.g. Master Binary Search recursion..."
-              className="flex-1 px-3 py-1.5 text-xs rounded-lg bg-dark-900 border border-slate-700 text-white placeholder-slate-500 focus:outline-none focus:border-brand-purple"
+              className="field-control flex-1 px-3 py-2 text-xs"
               autoFocus
             />
             <button
               type="submit"
-              className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-gradient-to-r from-brand-purple to-brand-blue text-white shadow-sm hover:opacity-95"
+              className="button-primary px-3 py-1.5 rounded-lg text-xs font-semibold"
             >
               Add
             </button>
@@ -151,28 +146,28 @@ export default function DailyGoalsList() {
       {/* Goals Checklist List */}
       <div className="mt-4 space-y-2.5">
         {goals.map((goal) => {
-          const categoryStyle = categoryColors[goal.category] || categoryColors.Algorithms;
+          const categoryStyle = categoryColors;
 
           return (
             <div
               key={goal.id}
               onClick={() => toggleGoal(goal.id)}
-              className={`p-3.5 rounded-xl border transition-all duration-200 cursor-pointer flex items-start space-x-3 group select-none ${
+              className={`p-3 rounded-lg border transition-colors duration-150 cursor-pointer flex items-start space-x-3 group select-none ${
                 goal.completed
                   ? 'bg-dark-950/40 border-slate-800/60 opacity-75'
-                  : 'bg-dark-850/80 hover:bg-dark-850 border-slate-800 hover:border-slate-700'
+                  : 'bg-dark-850 hover:bg-dark-800 border-slate-800 hover:border-slate-700'
               }`}
             >
               {/* Checkbox Icon */}
               <button
                 type="button"
-                className="mt-0.5 text-slate-400 group-hover:text-brand-purple-light transition-colors"
+                className="mt-0.5 text-slate-400 group-hover:text-brand-blue-light transition-colors"
                 aria-label={goal.completed ? 'Mark uncompleted' : 'Mark completed'}
               >
                 {goal.completed ? (
-                  <CheckCircle2 className="w-5 h-5 text-emerald-400 fill-emerald-500/20" />
+                  <CheckCircle2 className="w-5 h-5 text-emerald-300" />
                 ) : (
-                  <Circle className="w-5 h-5 text-slate-500 group-hover:text-brand-purple-light" />
+                  <Circle className="w-5 h-5 text-slate-500 group-hover:text-brand-blue-light" />
                 )}
               </button>
 
@@ -205,4 +200,3 @@ export default function DailyGoalsList() {
     </div>
   );
 }
-

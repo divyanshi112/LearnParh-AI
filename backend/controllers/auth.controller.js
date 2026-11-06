@@ -1,11 +1,8 @@
 import { User } from '../models/index.js';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
-import dotenv from 'dotenv';
+import { getJwtSecret } from '../config/jwt.js';
 
-dotenv.config();
-
-const JWT_SECRET = process.env.JWT_SECRET || 'changeme';
 const JWT_EXPIRES_IN = '7d'; // 7 days token life
 
 /**
@@ -85,7 +82,7 @@ export const login = async (req, res) => {
     }
     // Create JWT payload (only safe fields)
     const payload = { id: user._id, role: user.role };
-    const token = jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
+    const token = jwt.sign(payload, getJwtSecret(), { expiresIn: JWT_EXPIRES_IN });
 
     // Return token and minimal user info (no password)
     const { password: _, ...userData } = user.toObject();

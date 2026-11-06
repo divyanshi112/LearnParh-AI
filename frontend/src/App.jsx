@@ -5,6 +5,11 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import Dashboard from './pages/Dashboard.jsx';
 import Profile from './pages/Profile.jsx';
 import Subjects from './pages/Subjects.jsx';
+import StudyPlan from './pages/StudyPlan.jsx';
+import AITutor from './pages/AITutor.jsx';
+import Progress from './pages/Progress.jsx';
+import Quizzes from './pages/Quizzes.jsx';
+import Settings from './pages/Settings.jsx';
 
 // Public auth pages
 import Login from './pages/Login.jsx';
@@ -49,6 +54,18 @@ export default function App() {
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/study-plan"
+          element={
+            <ProtectedRoute>
+              <StudyPlan />
+            </ProtectedRoute>
+          }
+        />
+        <Route path="/ai-tutor" element={<ProtectedRoute><AITutor /></ProtectedRoute>} />
+        <Route path="/quizzes" element={<ProtectedRoute><Quizzes /></ProtectedRoute>} />
+        <Route path="/progress" element={<ProtectedRoute><Progress /></ProtectedRoute>} />
+        <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
 
         {/* Default – redirect root to dashboard if authenticated, otherwise login */}
         <Route

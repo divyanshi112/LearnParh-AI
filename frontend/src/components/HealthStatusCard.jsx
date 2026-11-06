@@ -35,12 +35,12 @@ export default function HealthStatusCard() {
   const isConnected = Boolean(health?.success && health?.data?.status === 'healthy');
 
   return (
-    <div className="rounded-2xl border border-slate-800 bg-dark-900/90 shadow-xl overflow-hidden transition-all duration-300 hover:border-slate-700">
+    <div className="rounded-xl border border-slate-800 bg-dark-900 overflow-hidden">
       {/* Top Header Bar */}
-      <div className="px-6 py-5 border-b border-slate-800/80 flex flex-wrap items-center justify-between gap-4 bg-gradient-to-r from-dark-850 to-dark-900">
+      <div className="px-5 py-4 border-b border-slate-800 flex flex-wrap items-center justify-between gap-4 bg-dark-900">
         <div className="flex items-center space-x-3">
           {/* Status Icon Indicator */}
-          <div className={`p-2.5 rounded-xl transition-colors duration-300 ${loading
+          <div className={`p-2.5 rounded-lg border transition-colors duration-150 ${loading
               ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
               : isConnected
                 ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
@@ -54,16 +54,16 @@ export default function HealthStatusCard() {
               <h2 className="text-lg font-semibold text-white tracking-tight">Backend Health Verification</h2>
 
               {/* Dynamic Connection Status Badge (Requirement 4 & 5) */}
-              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold tracking-wide uppercase transition-colors duration-300 ${loading
+              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium tracking-wide transition-colors duration-150 ${loading
                   ? 'bg-amber-400/10 text-amber-400 border border-amber-400/30'
                   : isConnected
-                    ? 'bg-emerald-400/10 text-emerald-400 border border-emerald-400/30'
+                    ? 'bg-emerald-500/10 text-emerald-300 border border-emerald-500/30'
                     : 'bg-rose-400/10 text-rose-400 border border-rose-400/30'
                 }`}>
                 <span className={`w-2 h-2 rounded-full mr-1.5 ${loading
                     ? 'bg-amber-400 animate-pulse'
                     : isConnected
-                      ? 'bg-emerald-400 animate-ping'
+                      ? 'bg-emerald-400'
                       : 'bg-rose-400'
                   }`}></span>
                 {loading ? 'Connecting...' : isConnected ? 'Connected' : 'Disconnected'}
@@ -79,7 +79,7 @@ export default function HealthStatusCard() {
         <button
           onClick={performHealthCheck}
           disabled={loading}
-          className="inline-flex items-center space-x-2 px-4 py-2 rounded-xl text-xs font-semibold bg-dark-800 hover:bg-dark-700 text-slate-200 border border-slate-700/80 transition-all hover:border-brand-purple/50 active:scale-95 disabled:opacity-50"
+          className="inline-flex items-center space-x-2 px-4 py-2 rounded-lg text-xs font-medium bg-dark-800 hover:bg-dark-700 text-slate-200 border border-slate-700 transition-colors disabled:opacity-50"
         >
           <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin text-brand-purple-light' : 'text-slate-400'}`} />
           <span>{loading ? 'Pinging Server...' : 'Test Connection'}</span>
@@ -90,7 +90,7 @@ export default function HealthStatusCard() {
       <div className="p-6">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {/* Card 1: Connection Status & Backend Message */}
-          <div className="p-4 rounded-xl bg-dark-850/60 border border-slate-800/80 flex flex-col justify-between">
+          <div className="p-4 rounded-lg bg-dark-850 border border-slate-800 flex flex-col justify-between">
             <div className="flex items-center justify-between text-slate-400 mb-2">
               <span className="text-xs font-medium">Connection Status</span>
               {loading ? (
@@ -117,7 +117,7 @@ export default function HealthStatusCard() {
           </div>
 
           {/* Card 2: Round-trip Latency */}
-          <div className="p-4 rounded-xl bg-dark-850/60 border border-slate-800/80 flex flex-col justify-between">
+          <div className="p-4 rounded-lg bg-dark-850 border border-slate-800 flex flex-col justify-between">
             <div className="flex items-center justify-between text-slate-400 mb-2">
               <span className="text-xs font-medium">Round-trip Latency</span>
               <Zap className="w-4 h-4 text-brand-blue-light" />
@@ -133,7 +133,7 @@ export default function HealthStatusCard() {
           </div>
 
           {/* Card 3: Backend Environment */}
-          <div className="p-4 rounded-xl bg-dark-850/60 border border-slate-800/80 flex flex-col justify-between">
+          <div className="p-4 rounded-lg bg-dark-850 border border-slate-800 flex flex-col justify-between">
             <div className="flex items-center justify-between text-slate-400 mb-2">
               <span className="text-xs font-medium">Environment</span>
               <Globe className="w-4 h-4 text-brand-purple-light" />
@@ -149,7 +149,7 @@ export default function HealthStatusCard() {
           </div>
 
           {/* Card 4: Last Verified / Uptime */}
-          <div className="p-4 rounded-xl bg-dark-850/60 border border-slate-800/80 flex flex-col justify-between">
+          <div className="p-4 rounded-lg bg-dark-850 border border-slate-800 flex flex-col justify-between">
             <div className="flex items-center justify-between text-slate-400 mb-2">
               <span className="text-xs font-medium">Last Ping</span>
               <Clock className="w-4 h-4 text-slate-400" />

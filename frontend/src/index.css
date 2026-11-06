@@ -3,10 +3,124 @@
 @tailwind utilities;
 
 @layer base {
+  :root {
+    color-scheme: dark;
+    --app-bg: #17191D;
+    --sidebar-bg: #141619;
+    --card-bg: #22252B;
+    --border-color: #343941;
+    --text-primary: #F1F2F4;
+    --text-secondary: #A0A5AE;
+    --accent: #6095D5;
+    --button-primary: #477DBB;
+    --button-primary-hover: #3D6D9F;
+    --success: #73A88A;
+    --error: #C77B7B;
+  }
+
+  * {
+    scrollbar-color: #454B55 #17191D;
+  }
+
   body {
-    background-color: #070A12;
-    color: #F1F5F9;
+    min-width: 320px;
+    min-height: 100vh;
+    background-color: var(--app-bg);
+    color: var(--text-primary);
     font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-size: 14px;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  button,
+  input,
+  select,
+  textarea {
+    font: inherit;
+  }
+
+  button,
+  a,
+  input,
+  select,
+  textarea {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  ::selection {
+    background: rgb(96 149 213 / 28%);
+  }
+
+  input[type='date'],
+  input[type='time'],
+  input[type='datetime-local'] {
+    color-scheme: dark;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      scroll-behavior: auto !important;
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+@layer utilities {
+  .button-primary {
+    background-color: var(--button-primary);
+    color: #F1F2F4;
+    transition: background-color 120ms ease;
+  }
+
+  .button-primary:hover {
+    background-color: var(--button-primary-hover);
+  }
+
+  .button-primary:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+
+  .surface-card {
+    border: 1px solid var(--border-color);
+    border-radius: 0.75rem;
+    background-color: var(--card-bg);
+    box-shadow: none;
+  }
+
+  .field-control {
+    width: 100%;
+    border: 1px solid var(--border-color);
+    border-radius: 0.5rem;
+    background-color: #1B1E23;
+    color: var(--text-primary);
+    outline: none;
+    transition: border-color 120ms ease, background-color 120ms ease;
+  }
+
+  .field-control::placeholder {
+    color: #777E88;
+  }
+
+  .field-control:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px rgb(96 149 213 / 16%);
+  }
+
+  .field-control:disabled,
+  .field-control[readonly] {
+    background-color: #1B1E23;
+    color: var(--text-secondary);
   }
 }
 
@@ -17,15 +131,15 @@
 }
 
 ::-webkit-scrollbar-track {
-  background: #0B0F19;
+  background: #17191D;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #1E293B;
-  border-radius: 4px;
+  background: #343941;
+  border: 2px solid #17191D;
+  border-radius: 8px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #334155;
+  background: #454B55;
 }
-

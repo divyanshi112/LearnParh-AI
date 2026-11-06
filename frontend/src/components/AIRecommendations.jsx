@@ -11,9 +11,9 @@ import {
 import { aiRecommendations } from '../services/dashboardService';
 
 const difficultyBadges = {
-  Beginner: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
-  Intermediate: 'bg-blue-500/10 text-brand-blue-light border-blue-500/20',
-  Advanced: 'bg-purple-500/10 text-brand-purple-light border-purple-500/20',
+  Beginner: 'bg-emerald-500/10 text-emerald-300 border-emerald-500/20',
+  Intermediate: 'bg-dark-800 text-slate-300 border-slate-700',
+  Advanced: 'bg-dark-800 text-slate-300 border-slate-700',
 };
 
 export default function AIRecommendations({ recommendations = aiRecommendations }) {
@@ -28,18 +28,18 @@ export default function AIRecommendations({ recommendations = aiRecommendations 
   };
 
   return (
-    <div className="rounded-2xl border border-slate-800 bg-dark-900 shadow-xl p-5 sm:p-6 transition-all duration-300">
+    <div className="rounded-xl border border-slate-800 bg-dark-900 p-5 sm:p-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-4 border-b border-slate-800/80">
         <div>
           <div className="flex items-center space-x-2">
-            <div className="p-1 rounded-lg bg-gradient-to-tr from-brand-purple to-brand-blue text-white shadow-glow-purple">
+            <div className="p-1 rounded-md bg-brand-blue text-white">
               <Sparkles className="w-3.5 h-3.5" />
             </div>
             <h3 className="text-base sm:text-lg font-bold text-white tracking-tight">
               AI Recommendations & Study Suggestions
             </h3>
-            <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-purple-500/10 text-brand-purple-light border border-purple-500/20">
+            <span className="text-[10px] font-medium px-2 py-0.5 rounded-md bg-dark-800 text-slate-400 border border-slate-700">
               Personalized
             </span>
           </div>
@@ -62,12 +62,12 @@ export default function AIRecommendations({ recommendations = aiRecommendations 
           return (
             <div
               key={rec.id}
-              className="p-4 rounded-xl bg-dark-850/70 border border-slate-800 hover:border-slate-700 transition-all duration-300 hover:shadow-glow-purple/20 flex flex-col justify-between group"
+              className="p-4 rounded-lg bg-dark-850 border border-slate-800 hover:border-slate-700 transition-colors flex flex-col justify-between group"
             >
               <div>
                 {/* Meta Top: Subject + Difficulty */}
                 <div className="flex items-center justify-between gap-2">
-                  <span className="text-[11px] font-semibold text-brand-blue-light uppercase tracking-wider">
+                  <span className="text-[11px] font-medium text-slate-400 uppercase tracking-wider">
                     {rec.subject}
                   </span>
                   <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${difficultyStyle}`}>
@@ -76,7 +76,7 @@ export default function AIRecommendations({ recommendations = aiRecommendations 
                 </div>
 
                 {/* Topic Title */}
-                <h4 className="text-sm font-bold text-white mt-2 group-hover:text-brand-purple-light transition-colors tracking-tight">
+                <h4 className="text-sm font-semibold text-white mt-2 tracking-tight">
                   {rec.topic}
                 </h4>
 
@@ -97,8 +97,8 @@ export default function AIRecommendations({ recommendations = aiRecommendations 
                   onClick={() => handleStartTopic(rec)}
                   className={`inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all ${
                     isStarted
-                      ? 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/30'
-                      : 'bg-dark-800 hover:bg-gradient-to-r hover:from-brand-purple hover:to-brand-blue text-slate-200 hover:text-white border border-slate-700/80 hover:border-transparent shadow-sm'
+                      ? 'bg-emerald-500/10 text-emerald-300 border border-emerald-500/30'
+                      : 'bg-dark-800 hover:bg-dark-700 text-slate-200 border border-slate-700'
                   }`}
                 >
                   {isStarted ? (
@@ -121,9 +121,9 @@ export default function AIRecommendations({ recommendations = aiRecommendations 
 
       {/* Active Modal / Toast when topic is initiated */}
       {activeTopic && (
-        <div className="mt-4 p-3.5 rounded-xl bg-purple-950/30 border border-purple-800/40 flex items-center justify-between text-xs animate-in fade-in duration-200">
-          <div className="flex items-center space-x-2 text-purple-200">
-            <Sparkles className="w-4 h-4 text-brand-purple-light flex-shrink-0" />
+        <div className="mt-4 p-3.5 rounded-lg bg-dark-850 border border-slate-700 flex items-center justify-between text-xs">
+          <div className="flex items-center space-x-2 text-slate-300">
+            <Sparkles className="w-4 h-4 text-brand-blue-light flex-shrink-0" />
             <span>
               Topic session prepared: <strong>{activeTopic.topic}</strong>. AI Tutor module will be activated in Phase 3.
             </span>
@@ -139,4 +139,3 @@ export default function AIRecommendations({ recommendations = aiRecommendations 
     </div>
   );
 }
-

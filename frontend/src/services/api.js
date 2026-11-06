@@ -85,5 +85,39 @@ export async function registerUser({ name, email, password }) {
   }
 }
 
+async function requestStudentProfile(method, body) {
+  const token = localStorage.getItem('token');
+  if (!token) {
+    return { success: false, status: 401, message: 'Please log in to access your profile.' };
+  }
+
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/profile`, {
+      method,
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      ...(body ? { body: JSON.stringify(body) } : {}),
+    });
+    const data = await response.json();
+    return response.ok
+      ? { success: true, ...data }
+      : {
+          success: false,
+          status: response.status,
+          message: data.message || 'Profile request failed',
+          errors: data.errors,
+        };
+  } catch (err) {
+    return { success: false, message: err.message || 'Unable to reach the server.' };
+  }
+}
+
+export const getStudentProfile = () => requestStudentProfile('GET');
+export const createStudentProfile = (profile) => requestStudentProfile('POST', profile);
+export const updateStudentProfile = (profile) => requestStudentProfile('PUT', profile);
+
 // Backward-compatible alias
 export const getBackendHealth = fetchHealthStatus;

@@ -52,24 +52,24 @@ export default function AITutor() {
     <DashboardLayout pageTitle="AI Tutor">
       <div className="space-y-6">
         {/* Banner */}
-        <div className="p-6 rounded-3xl bg-gradient-to-br from-dark-900 to-dark-850 border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="p-6 rounded-xl bg-dark-900 border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <div className="flex items-center space-x-2 text-xs font-semibold text-brand-purple-light uppercase tracking-wider mb-2">
+            <div className="flex items-center space-x-2 text-xs font-medium text-slate-400 uppercase tracking-wider mb-2">
               <Sparkles className="w-3.5 h-3.5" />
               <span>Google Gemini AI Integration Ready</span>
             </div>
-            <h2 className="text-2xl font-bold text-white tracking-tight">24/7 Intelligent Tutor</h2>
+            <h2 className="text-2xl font-semibold text-white tracking-tight">24/7 Intelligent Tutor</h2>
             <p className="text-slate-400 text-xs sm:text-sm mt-1 max-w-xl">
               Conversational reasoning grounded in your enrolled computer science & math coursework.
             </p>
           </div>
-          <span className="text-xs font-semibold px-3 py-1.5 rounded-full bg-purple-500/10 text-brand-purple-light border border-purple-500/30 self-start sm:self-auto">
+          <span className="text-xs font-medium px-3 py-1.5 rounded-md bg-dark-800 text-slate-300 border border-slate-700 self-start sm:self-auto">
             Phase 3 Engine
           </span>
         </div>
 
         {/* Chat Container */}
-        <div className="rounded-2xl border border-slate-800 bg-dark-900 shadow-xl overflow-hidden flex flex-col h-[520px]">
+        <div className="rounded-xl border border-slate-800 bg-dark-900 overflow-hidden flex flex-col min-h-[480px] h-[min(520px,calc(100dvh-14rem))]">
           {/* Chat Messages Log */}
           <div className="flex-1 p-6 overflow-y-auto space-y-4">
             {messages.map((m) => (
@@ -78,16 +78,16 @@ export default function AITutor() {
                 className={`flex items-start space-x-3 ${m.sender === 'user' ? 'justify-end' : 'justify-start'}`}
               >
                 {m.sender === 'ai' && (
-                  <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-brand-purple to-brand-blue flex items-center justify-center text-white shadow-glow-purple flex-shrink-0">
+                  <div className="w-8 h-8 rounded-lg bg-brand-blue flex items-center justify-center text-white flex-shrink-0">
                     <Bot className="w-4 h-4" />
                   </div>
                 )}
 
                 <div
-                  className={`max-w-lg p-4 rounded-2xl text-xs sm:text-sm leading-relaxed ${
+                  className={`max-w-lg p-4 rounded-xl text-xs sm:text-sm leading-relaxed ${
                     m.sender === 'user'
-                      ? 'bg-gradient-to-r from-brand-purple to-brand-blue text-white rounded-tr-none'
-                      : 'bg-dark-850 border border-slate-800 text-slate-200 rounded-tl-none shadow-sm'
+                      ? 'bg-brand-blue text-white rounded-tr-none'
+                      : 'bg-dark-850 border border-slate-800 text-slate-200 rounded-tl-none'
                   }`}
                 >
                   <p>{m.text}</p>
@@ -100,7 +100,7 @@ export default function AITutor() {
           </div>
 
           {/* Quick Prompts */}
-          <div className="px-6 py-2.5 bg-dark-850/50 border-t border-slate-800/80 flex items-center space-x-2 overflow-x-auto no-scrollbar">
+          <div className="px-4 sm:px-6 py-2.5 bg-dark-850 border-t border-slate-800 flex items-center space-x-2 overflow-x-auto no-scrollbar">
             <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 flex items-center space-x-1 flex-shrink-0">
               <Lightbulb className="w-3 h-3 text-amber-400" />
               <span>Try:</span>
@@ -109,7 +109,7 @@ export default function AITutor() {
               <button
                 key={i}
                 onClick={() => setInput(p)}
-                className="text-[11px] px-3 py-1 rounded-full bg-dark-800 hover:bg-dark-750 text-slate-300 border border-slate-700/60 whitespace-nowrap transition-colors flex-shrink-0"
+                className="text-[11px] px-3 py-1.5 rounded-md bg-dark-800 hover:bg-dark-700 text-slate-300 border border-slate-700 whitespace-nowrap transition-colors flex-shrink-0"
               >
                 {p}
               </button>
@@ -117,17 +117,17 @@ export default function AITutor() {
           </div>
 
           {/* Input Box */}
-          <form onSubmit={handleSend} className="p-4 bg-dark-900 border-t border-slate-800/80 flex items-center space-x-3">
+          <form onSubmit={handleSend} className="p-3 sm:p-4 bg-dark-900 border-t border-slate-800 flex items-center gap-2 sm:gap-3">
             <input
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder="Ask a question, request an explanation, or paste homework problem..."
-              className="flex-1 px-4 py-2.5 text-xs sm:text-sm rounded-xl bg-dark-850 border border-slate-800 text-white placeholder-slate-500 focus:outline-none focus:border-brand-purple focus:ring-1 focus:ring-brand-purple"
+              className="field-control min-w-0 flex-1 px-3 sm:px-4 py-2.5 text-xs sm:text-sm"
             />
             <button
               type="submit"
-              className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-brand-purple to-brand-blue text-white text-xs font-semibold shadow-glow-purple hover:opacity-95 transition-all flex items-center space-x-1.5"
+              className="button-primary px-3 sm:px-4 py-2.5 rounded-lg text-xs font-medium flex items-center space-x-1.5"
             >
               <span>Send</span>
               <Send className="w-3.5 h-3.5" />
@@ -138,4 +138,3 @@ export default function AITutor() {
     </DashboardLayout>
   );
 }
-

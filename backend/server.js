@@ -4,6 +4,8 @@ import dotenv from 'dotenv';
 import connectDB from './config/db.js';
 import healthRoutes from './routes/health.routes.js';
 import authRoutes from './routes/auth.routes.js';
+import profileRoutes from './routes/profile.routes.js';
+import studyPlanRoutes from './routes/studyPlan.routes.js';
 import testDBRoutes from './routes/testDB.routes.js';
 import { notFound, errorHandler } from './middleware/error.middleware.js';
 
@@ -45,13 +47,15 @@ app.use(cors({
 }));
 
 // Body parsing middleware
-app.use(express.json());
+app.use(express.json({ limit: '1mb' }));
 app.use(express.urlencoded({ extended: true }));
 
 // Base API route mount
 app.use('/api', healthRoutes);
 app.use('/api', testDBRoutes);
 app.use('/api/auth', authRoutes);
+app.use('/api/profile', profileRoutes);
+app.use('/api/study-plan', studyPlanRoutes);
 
 // Root informational endpoint
 app.get('/', (req, res) => {

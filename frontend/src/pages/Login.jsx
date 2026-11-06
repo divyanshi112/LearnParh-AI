@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { loginUser } from '../services/api';
+import { GraduationCap } from 'lucide-react';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -28,49 +29,61 @@ export default function Login() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-900 text-white">
-      <div className="w-full max-w-sm space-y-6 p-6 bg-gray-800 rounded-lg shadow-md">
-        <h2 className="text-center text-2xl font-bold">Login</h2>
-        {error && <p className="text-red-500 text-center">{error}</p>}
-        <form className="space-y-4" onSubmit={handleSubmit}>
+    <div className="flex min-h-screen items-center justify-center bg-dark-950 px-4 py-10 text-slate-100">
+      <div className="w-full max-w-md">
+        <div className="mb-8 flex items-center justify-center gap-3">
+          <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-brand-blue text-white">
+            <GraduationCap className="h-5 w-5" />
+          </span>
+          <span className="text-lg font-semibold tracking-tight">LearnPath <span className="text-brand-blue-light">AI</span></span>
+        </div>
+        <div className="space-y-6 rounded-xl border border-slate-800 bg-dark-900 p-6 sm:p-8">
+          <div className="text-center">
+            <h1 className="text-2xl font-semibold tracking-tight text-white">Welcome back</h1>
+            <p className="mt-2 text-sm text-slate-400">Sign in to continue to your study workspace.</p>
+          </div>
+          {error && <p role="alert" className="rounded-lg border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-sm text-rose-300">{error}</p>}
+          <form className="space-y-4" onSubmit={handleSubmit}>
           <div>
-            <label className="block text-sm mb-1" htmlFor="email">Email</label>
+            <label className="mb-1.5 block text-sm font-medium text-slate-300" htmlFor="email">Email</label>
             <input
               id="email"
               type="email"
               required
-              className="w-full px-3 py-2 rounded bg-gray-700 focus:outline-none"
+              autoComplete="email"
+              className="field-control px-3 py-2.5"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
             />
           </div>
           <div>
-            <label className="block text-sm mb-1" htmlFor="password">Password</label>
+            <label className="mb-1.5 block text-sm font-medium text-slate-300" htmlFor="password">Password</label>
             <input
               id="password"
               type="password"
               required
               minLength={6}
-              className="w-full px-3 py-2 rounded bg-gray-700 focus:outline-none"
+              autoComplete="current-password"
+              className="field-control px-3 py-2.5"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
           </div>
           <button
             type="submit"
-            className="w-full py-2 bg-purple-600 hover:bg-purple-500 rounded transition"
+            className="button-primary w-full rounded-lg py-2.5 text-sm font-medium"
           >
             Sign In
           </button>
         </form>
-        <p className="text-center text-sm">
+        <p className="text-center text-sm text-slate-400">
           Don’t have an account?{' '}
-          <Link to="/register" className="text-purple-400 hover:underline">
-            Register here
+          <Link to="/register" className="font-medium text-brand-blue-light hover:underline">
+            Create an account
           </Link>
         </p>
+        </div>
       </div>
     </div>
   );
 }
-
