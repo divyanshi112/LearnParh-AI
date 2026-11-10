@@ -1,16 +1,14 @@
+import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
-import dotenv from 'dotenv';
 import connectDB from './config/db.js';
 import healthRoutes from './routes/health.routes.js';
 import authRoutes from './routes/auth.routes.js';
 import profileRoutes from './routes/profile.routes.js';
 import studyPlanRoutes from './routes/studyPlan.routes.js';
+import aiRoutes from './routes/ai.routes.js';
 import testDBRoutes from './routes/testDB.routes.js';
 import { notFound, errorHandler } from './middleware/error.middleware.js';
-
-// Load environment variables
-dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -56,6 +54,7 @@ app.use('/api', testDBRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/profile', profileRoutes);
 app.use('/api/study-plan', studyPlanRoutes);
+app.use('/api/ai', aiRoutes);
 
 // Root informational endpoint
 app.get('/', (req, res) => {

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import DashboardLayout from '../components/DashboardLayout';
-import { Bot, Sparkles, Send, MessageSquare, Lightbulb, ArrowRight } from 'lucide-react';
+import { AlertCircle, Bot, Sparkles, Send, Lightbulb, LoaderCircle } from 'lucide-react';
+import { sendTutorMessage } from '../services/aiService.js';
 
 const suggestedPrompts = [
   'Explain backpropagation intuitively with a toy example.',
@@ -14,38 +15,46 @@ export default function AITutor() {
     {
       id: 1,
       sender: 'ai',
-      text: "Hello Alex! I am your 24/7 LearnPath AI Tutor. Ask me any question from your syllabus or paste a problem you'd like to work through step by step.",
+      text: "Hello! I am your LearnPath AI Tutor. Ask me any question or paste a problem you'd like to work through step by step.",
       time: '11:00 AM',
     },
   ]);
   const [input, setInput] = useState('');
+  const [isSending, setIsSending] = useState(false);
+  const [error, setError] = useState('');
 
-  const handleSend = (e) => {
+  const handleSend = async (e) => {
     e.preventDefault();
-    if (!input.trim()) return;
+    const message = input.trim();
+    if (!message || isSending) return;
 
     const userMsg = {
       id: Date.now(),
       sender: 'user',
-      text: input.trim(),
+      text: message,
       time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     };
 
     setMessages((prev) => [...prev, userMsg]);
     setInput('');
-
-    // Simulated responsive feedback explaining Phase 3 Gemini API integration
-    setTimeout(() => {
+    setError('');
+    setIsSending(true);
+    try {
+      const response = await sendTutorMessage(message);
       setMessages((prev) => [
         ...prev,
         {
           id: Date.now() + 1,
           sender: 'ai',
-          text: `Thank you for your question! In Phase 3, this conversation will connect directly to the Google Gemini API with conversational context grounded in your study syllabus.`,
+          text: response,
           time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         },
       ]);
-    }, 600);
+    } catch (requestError) {
+      setError(requestError.message || 'The AI Tutor request failed. Please try again.');
+    } finally {
+      setIsSending(false);
+    }
   };
 
   return (
@@ -56,15 +65,15 @@ export default function AITutor() {
           <div>
             <div className="flex items-center space-x-2 text-xs font-medium text-slate-400 uppercase tracking-wider mb-2">
               <Sparkles className="w-3.5 h-3.5" />
-              <span>Google Gemini AI Integration Ready</span>
+              <span>Powered by Google Gemini</span>
             </div>
             <h2 className="text-2xl font-semibold text-white tracking-tight">24/7 Intelligent Tutor</h2>
             <p className="text-slate-400 text-xs sm:text-sm mt-1 max-w-xl">
-              Conversational reasoning grounded in your enrolled computer science & math coursework.
+              Ask questions, get clear explanations, and work through problems step by step.
             </p>
           </div>
           <span className="text-xs font-medium px-3 py-1.5 rounded-md bg-dark-800 text-slate-300 border border-slate-700 self-start sm:self-auto">
-            Phase 3 Engine
+            AI Tutor
           </span>
         </div>
 
@@ -97,7 +106,19 @@ export default function AITutor() {
                 </div>
               </div>
             ))}
+            {isSending && (
+              <div className="flex items-center gap-2 text-sm text-slate-400" role="status">
+                <LoaderCircle className="w-4 h-4 animate-spin" />
+                <span>Thinking...</span>
+              </div>
+            )}
           </div>
+          {error && (
+            <div className="mx-4 sm:mx-6 mb-3 flex items-start gap-2 rounded-lg border border-red-900/60 bg-red-950/30 px-3 py-2 text-sm text-red-300" role="alert">
+              <AlertCircle className="mt-0.5 h-4 w-4 flex-shrink-0" />
+              <span>{error}</span>
+            </div>
+          )}
 
           {/* Quick Prompts */}
           <div className="px-4 sm:px-6 py-2.5 bg-dark-850 border-t border-slate-800 flex items-center space-x-2 overflow-x-auto no-scrollbar">
@@ -109,6 +130,8 @@ export default function AITutor() {
               <button
                 key={i}
                 onClick={() => setInput(p)}
+                type="button"
+                disabled={isSending}
                 className="text-[11px] px-3 py-1.5 rounded-md bg-dark-800 hover:bg-dark-700 text-slate-300 border border-slate-700 whitespace-nowrap transition-colors flex-shrink-0"
               >
                 {p}
@@ -122,14 +145,17 @@ export default function AITutor() {
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
+              disabled={isSending}
+              maxLength={4000}
               placeholder="Ask a question, request an explanation, or paste homework problem..."
               className="field-control min-w-0 flex-1 px-3 sm:px-4 py-2.5 text-xs sm:text-sm"
             />
             <button
               type="submit"
-              className="button-primary px-3 sm:px-4 py-2.5 rounded-lg text-xs font-medium flex items-center space-x-1.5"
+              disabled={isSending || !input.trim()}
+              className="button-primary px-3 sm:px-4 py-2.5 rounded-lg text-xs font-medium flex items-center space-x-1.5 disabled:cursor-not-allowed disabled:opacity-60"
             >
-              <span>Send</span>
+              <span>{isSending ? 'Sending' : 'Send'}</span>
               <Send className="w-3.5 h-3.5" />
             </button>
           </form>
