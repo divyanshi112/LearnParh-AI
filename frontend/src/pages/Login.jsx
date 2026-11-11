@@ -2,29 +2,32 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { loginUser } from '../services/api';
 import { GraduationCap } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext.jsx';
 
 export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { signIn } = useAuth();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
+    setLoading(true);
     try {
       const resp = await loginUser({ email, password });
       if (resp.success) {
-        // store JWT safely – for demo we use localStorage (could be HttpOnly cookie later)
-        localStorage.setItem('token', resp.token);
-        // optional: store minimal user info
-        localStorage.setItem('user', JSON.stringify(resp.user));
-        navigate('/');
+        signIn(resp.token, resp.user);
+        navigate('/dashboard', { replace: true });
       } else {
         setError(resp.message || 'Login failed');
       }
     } catch (err) {
-      setError('Network error – could not reach the server');
+      setError(err.message || 'Could not complete sign-in. Please try again.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -71,9 +74,10 @@ export default function Login() {
           </div>
           <button
             type="submit"
+            disabled={loading}
             className="button-primary w-full rounded-lg py-2.5 text-sm font-medium"
           >
-            Sign In
+            {loading ? 'Signing in…' : 'Sign In'}
           </button>
         </form>
         <p className="text-center text-sm text-slate-400">

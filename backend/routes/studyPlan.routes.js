@@ -6,6 +6,7 @@ import {
   deleteSubject,
   deleteTarget,
   deleteTopic,
+  getDashboardSummary,
   listSubjects,
   listTargets,
   updateSubject,
@@ -25,6 +26,8 @@ const requireObjectBody = (req, res, next) => {
 };
 
 router.use(authenticateToken);
+
+router.get('/dashboard', asyncRoute(getDashboardSummary));
 
 router.route('/subjects')
   .get(asyncRoute(listSubjects))

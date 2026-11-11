@@ -19,6 +19,7 @@ import {
   getStudentProfile,
   updateStudentProfile,
 } from '../services/api.js';
+import { useAuth } from '../contexts/AuthContext.jsx';
 
 const EMPTY_PROFILE = {
   fullName: '',
@@ -193,6 +194,7 @@ function ProfileSection({ icon: Icon, title, description, children }) {
 export default function Profile() {
   const location = useLocation();
   const navigate = useNavigate();
+  const { signOut } = useAuth();
   const [account, setAccount] = useState({});
   const [savedProfile, setSavedProfile] = useState(null);
   const [form, setForm] = useState(EMPTY_PROFILE);
@@ -209,6 +211,7 @@ export default function Profile() {
       if (!active) return;
       if (!response.success) {
         if (response.status === 401) {
+          signOut();
           navigate('/login', { replace: true });
           return;
         }
@@ -226,7 +229,7 @@ export default function Profile() {
     };
     loadProfile();
     return () => { active = false; };
-  }, [location.state, navigate]);
+  }, [location.state, navigate, signOut]);
 
   const completion = useMemo(() => {
     const completeCount = PROFILE_COMPLETION_FIELDS.filter((field) => {
@@ -309,6 +312,7 @@ export default function Profile() {
     setSaving(false);
     if (!response.success) {
       if (response.status === 401) {
+        signOut();
         navigate('/login', { replace: true });
         return;
       }

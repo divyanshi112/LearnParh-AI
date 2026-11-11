@@ -1,7 +1,13 @@
 import React, { useState } from 'react';
 import DashboardLayout from '../components/DashboardLayout';
 import { User, Bell, Shield, Moon, Save, Check } from 'lucide-react';
-import { studentProfile } from '../services/dashboardService';
+
+const studentProfile = {
+  name: 'Alex Morgan',
+  role: 'Computer Science & AI Track',
+  email: 'alex.morgan@learnpath.ai',
+  targetExamDate: '15 Nov 2026',
+};
 
 export default function Settings() {
   const [profile, setProfile] = useState(studentProfile);

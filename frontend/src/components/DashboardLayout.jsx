@@ -2,13 +2,13 @@ import React, { useState } from 'react';
 import Sidebar from './Sidebar';
 import TopNavbar from './TopNavbar';
 
-export default function DashboardLayout({ children, pageTitle = 'Dashboard' }) {
+export default function DashboardLayout({ children, pageTitle = 'Dashboard', student = null }) {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
     <div className="min-h-screen bg-dark-950 text-slate-100 flex flex-col font-sans">
       {/* Sidebar Navigation */}
-      <Sidebar mobileOpen={mobileOpen} setMobileOpen={setMobileOpen} />
+      <Sidebar mobileOpen={mobileOpen} setMobileOpen={setMobileOpen} student={student} />
 
       {/* Main Content Area (Offset for desktop fixed sidebar) */}
       <div className="lg:pl-64 flex-1 flex flex-col min-w-0">

@@ -14,6 +14,7 @@ import {
   X,
 } from 'lucide-react';
 import DashboardLayout from '../components/DashboardLayout.jsx';
+import StudyTimer from '../components/StudyTimer.jsx';
 import {
   createSubject,
   createTarget,
@@ -229,6 +230,14 @@ export default function StudyPlan() {
             {notice}
           </div>
         )}
+
+        <StudyTimer
+          subjects={subjects}
+          onSessionSaved={async () => {
+            await loadData();
+            setNotice('Study time saved and added to your dashboard activity.');
+          }}
+        />
 
         {loading ? (
           <div className="flex min-h-56 items-center justify-center gap-3 text-sm text-slate-400" role="status">

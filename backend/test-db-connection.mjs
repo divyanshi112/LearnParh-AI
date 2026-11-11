@@ -2,7 +2,15 @@ import dns from 'dns';
 import dotenv from 'dotenv';
 import mongoose from 'mongoose';
 import connectDB from './config/db.js';
-import { User, StudentProfile, StudyPlan, QuizResult, LearningProgress } from './models/index.js';
+import {
+  User,
+  StudentProfile,
+  StudyPlan,
+  QuizResult,
+  LearningProgress,
+  StudyMaterial,
+  StudyMaterialChunk,
+} from './models/index.js';
 
 // Resolve Windows DNS SRV lookup issues for MongoDB Atlas
 try {
@@ -30,6 +38,8 @@ try {
   console.log('   ✓ StudyPlan Model registered:', Boolean(StudyPlan.modelName));
   console.log('   ✓ QuizResult Model registered:', Boolean(QuizResult.modelName));
   console.log('   ✓ LearningProgress Model registered:', Boolean(LearningProgress.modelName));
+  console.log('   ✓ StudyMaterial Model registered:', Boolean(StudyMaterial.modelName));
+  console.log('   ✓ StudyMaterialChunk Model registered:', Boolean(StudyMaterialChunk.modelName));
 
   console.log('\n▶ [3/3] Sending Ping to MongoDB Atlas Admin Service...');
   const adminDb = mongoose.connection.db.admin();

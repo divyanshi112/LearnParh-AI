@@ -9,13 +9,28 @@ const questionAnswerSchema = new mongoose.Schema(
     questionText: {
       type: String,
     },
+    topicId: {
+      type: mongoose.Schema.Types.ObjectId,
+    },
+    topicName: {
+      type: String,
+      trim: true,
+    },
     selectedOption: {
       type: String,
       required: true,
     },
+    options: {
+      type: [String],
+      default: [],
+    },
     correctOption: {
       type: String,
       required: true,
+    },
+    explanation: {
+      type: String,
+      default: '',
     },
     isCorrect: {
       type: Boolean,
@@ -32,6 +47,20 @@ const quizResultSchema = new mongoose.Schema(
       ref: 'User',
       required: true,
     },
+    quizSessionId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'QuizSession',
+      unique: true,
+      sparse: true,
+    },
+    subjectId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Subject',
+    },
+    topics: {
+      type: [String],
+      default: [],
+    },
     quizTitle: {
       type: String,
       required: [true, 'Please provide quiz title'],
@@ -44,7 +73,7 @@ const quizResultSchema = new mongoose.Schema(
     },
     difficulty: {
       type: String,
-      enum: ['Beginner', 'Intermediate', 'Advanced'],
+      enum: ['Easy', 'Medium', 'Hard', 'Beginner', 'Intermediate', 'Advanced'],
       default: 'Intermediate',
     },
     totalQuestions: {
@@ -56,6 +85,13 @@ const quizResultSchema = new mongoose.Schema(
       type: Number,
       required: true,
       min: 0,
+    },
+    incorrectAnswers: {
+      type: Number,
+      min: 0,
+      default: function () {
+        return this.totalQuestions - this.correctAnswers;
+      },
     },
     scorePercentage: {
       type: Number,
@@ -89,4 +125,3 @@ quizResultSchema.index({ student: 1, completedAt: -1 });
 
 const QuizResult = mongoose.model('QuizResult', quizResultSchema);
 export default QuizResult;
-

@@ -10,10 +10,11 @@ import {
   BarChart,
   Bar
 } from 'recharts';
-import { BarChart3, TrendingUp, Calendar, Info } from 'lucide-react';
-import { weeklyActivityData } from '../services/dashboardService';
-
 // Custom Dark Mode Tooltip
+const formatHours = (hours) => (
+  hours > 0 && hours < 0.1 ? '<0.1' : hours.toFixed(1)
+);
+
 function CustomTooltip({ active, payload, label }) {
   if (active && payload && payload.length) {
     const data = payload[0].payload;
@@ -26,11 +27,13 @@ function CustomTooltip({ active, payload, label }) {
         <div className="space-y-1">
           <div className="flex items-center justify-between text-brand-blue-light space-x-3">
             <span>Hours Studied:</span>
-            <span className="font-bold font-mono text-white">{data.hours} hrs</span>
+            <span className="font-bold font-mono text-white">{formatHours(data.hours)} hrs</span>
           </div>
           <div className="flex items-center justify-between text-slate-400 space-x-3">
             <span>Daily Target:</span>
-            <span className="font-mono text-slate-300">{data.target} hrs</span>
+            <span className="font-mono text-slate-300">
+              {data.target === null || data.target === undefined ? 'Not set' : `${data.target} hrs`}
+            </span>
           </div>
           <div className="flex items-center justify-between text-slate-300 space-x-3 pt-1 border-t border-slate-800">
             <span>Quizzes Solved:</span>
@@ -43,11 +46,20 @@ function CustomTooltip({ active, payload, label }) {
   return null;
 }
 
-export default function WeeklyActivityChart({ data = weeklyActivityData }) {
+export default function WeeklyActivityChart({ data = [] }) {
   const [chartView, setChartView] = useState('area'); // 'area' | 'bar'
 
-  const totalWeeklyHours = data.reduce((acc, curr) => acc + curr.hours, 0).toFixed(1);
-  const avgDailyHours = (totalWeeklyHours / data.length).toFixed(1);
+  const totalWeeklyHours = data.reduce((acc, curr) => acc + curr.hours, 0);
+  const now = new Date();
+  const today = [
+    now.getFullYear(),
+    String(now.getMonth() + 1).padStart(2, '0'),
+    String(now.getDate()).padStart(2, '0'),
+  ].join('-');
+  const elapsedDays = data.filter((entry) => entry.date <= today).length;
+  const avgDailyHours = elapsedDays ? totalWeeklyHours / elapsedDays : 0;
+  const dailyTarget = data[0]?.target;
+  const hasActivity = data.some((entry) => entry.hours > 0 || entry.quizzes > 0);
 
   return (
     <div className="rounded-xl border border-slate-800 bg-dark-900 p-5 sm:p-6">
@@ -58,12 +70,15 @@ export default function WeeklyActivityChart({ data = weeklyActivityData }) {
             <h3 className="text-base sm:text-lg font-bold text-white tracking-tight">
               Weekly Learning Activity
             </h3>
-            <span className="text-[11px] font-medium px-2 py-0.5 rounded-md bg-dark-800 text-slate-400 border border-slate-700">
-              Demo Data
-            </span>
           </div>
           <p className="text-xs text-slate-400 mt-1">
-            Total this week: <strong className="text-white">{totalWeeklyHours} hrs</strong> (Avg: {avgDailyHours} hrs/day)
+            Total this week: <strong className="text-white">{formatHours(totalWeeklyHours)} hrs</strong>
+            {' '}· Average: <strong className="text-white">{formatHours(avgDailyHours)} hrs/day</strong>
+          </p>
+          <p className="mt-1 text-xs text-slate-400">
+            Daily target: <strong className="text-slate-200">
+              {dailyTarget === undefined || dailyTarget === null ? 'Not set' : `${dailyTarget} hrs`}
+            </strong>
           </p>
         </div>
 
@@ -94,8 +109,12 @@ export default function WeeklyActivityChart({ data = weeklyActivityData }) {
         </div>
       </div>
 
-      {/* Chart Canvas */}
-      <div className="mt-6 h-64 sm:h-72 w-full">
+      {!hasActivity ? (
+        <div className="mt-6 flex h-64 items-center justify-center rounded-lg border border-dashed border-slate-700 text-sm text-slate-400">
+          No study activity has been recorded this week.
+        </div>
+      ) : (
+      <div className="mt-6 h-64 w-full sm:h-72">
         <ResponsiveContainer width="100%" height="100%">
           {chartView === 'area' ? (
             <AreaChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
@@ -134,16 +153,18 @@ export default function WeeklyActivityChart({ data = weeklyActivityData }) {
                 fillOpacity={1}
                 fill="url(#purpleGradient)"
               />
-              <Area
-                type="monotone"
-                dataKey="target"
-                name="Target"
-                stroke="#A0A5AE"
-                strokeWidth={1.5}
-                strokeDasharray="4 4"
-                fillOpacity={1}
-                fill="url(#blueGradient)"
-              />
+              {data.some((entry) => entry.target > 0) && (
+                <Area
+                  type="monotone"
+                  dataKey="target"
+                  name="Daily Study Goal"
+                  stroke="#A0A5AE"
+                  strokeWidth={1.5}
+                  strokeDasharray="4 4"
+                  fillOpacity={1}
+                  fill="url(#blueGradient)"
+                />
+              )}
             </AreaChart>
           ) : (
             <BarChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
@@ -173,22 +194,20 @@ export default function WeeklyActivityChart({ data = weeklyActivityData }) {
           )}
         </ResponsiveContainer>
       </div>
+      )}
 
-      {/* Legend Footer */}
       <div className="mt-4 pt-3 border-t border-slate-800/60 flex flex-wrap items-center justify-between text-xs text-slate-400 gap-2">
         <div className="flex items-center space-x-4">
           <div className="flex items-center space-x-2">
             <span className="w-2.5 h-2.5 rounded-full bg-brand-blue"></span>
             <span>Study Hours Logged</span>
           </div>
-          <div className="flex items-center space-x-2">
+          {data.some((entry) => entry.target > 0) && <div className="flex items-center space-x-2">
             <span className="w-2.5 h-2.5 rounded-full bg-slate-400"></span>
-            <span>Target Benchmark (3.0h)</span>
-          </div>
+            <span>Daily Study Goal</span>
+          </div>}
         </div>
-        <span className="text-[11px] text-slate-500 font-mono">
-          Last refreshed: Today, 11:30 AM
-        </span>
+        <span className="text-[11px] text-slate-500 font-mono">This week</span>
       </div>
     </div>
   );

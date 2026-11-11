@@ -5,13 +5,13 @@ import {
   Search, 
   Bell, 
   Command,
-  RefreshCw,
   ChevronDown,
   UserRound,
   Pencil,
   LogOut
 } from 'lucide-react';
-import { fetchHealthStatus, getStudentProfile } from '../services/api';
+import { getStudentProfile } from '../services/api';
+import { useAuth } from '../contexts/AuthContext.jsx';
 
 const readStoredUser = () => {
   try {
@@ -26,28 +26,12 @@ const getInitials = (name = '') =>
 
 export default function TopNavbar({ pageTitle = 'Dashboard', setMobileOpen }) {
   const navigate = useNavigate();
+  const { signOut } = useAuth();
   const profileMenuRef = useRef(null);
-  const [backendHealth, setBackendHealth] = useState(null);
-  const [pinging, setPinging] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const [student, setStudent] = useState(() => ({ user: readStoredUser(), profile: null }));
   const [searchQuery, setSearchQuery] = useState('');
-
-  // Live health monitoring
-  const checkBackend = async () => {
-    setPinging(true);
-    const res = await fetchHealthStatus();
-    setBackendHealth(res);
-    setPinging(false);
-  };
-
-  useEffect(() => {
-    checkBackend();
-    // Poll every 30 seconds for live connection status
-    const interval = setInterval(checkBackend, 30000);
-    return () => clearInterval(interval);
-  }, []);
 
   useEffect(() => {
     let active = true;
@@ -88,15 +72,8 @@ export default function TopNavbar({ pageTitle = 'Dashboard', setMobileOpen }) {
     };
   }, [profileMenuOpen]);
 
-  const isConnected = Boolean(backendHealth?.success && backendHealth?.data?.status === 'healthy');
   const studentName = student.profile?.fullName || student.user?.name || 'Student';
   const profilePicture = student.profile?.profilePicture;
-
-  const demoNotifications = [
-    { id: 1, title: 'New AI Quiz Ready', time: '10m ago', unread: true },
-    { id: 2, title: 'Streak Milestone: 8 Days!', time: '2h ago', unread: false },
-    { id: 3, title: 'Weekly Review Generated', time: 'Yesterday', unread: false },
-  ];
 
   return (
     <header className="sticky top-0 z-20 min-h-16 bg-dark-950 border-b border-slate-800 px-3 sm:px-6 lg:px-8 flex items-center justify-between gap-3">
@@ -138,25 +115,8 @@ export default function TopNavbar({ pageTitle = 'Dashboard', setMobileOpen }) {
         </div>
       </div>
 
-      {/* Right: Actions, Backend Status Badge & Profile */}
+      {/* Right: Actions & Profile */}
       <div className="flex items-center gap-1 sm:gap-3">
-        {/* Requirement: Live Backend Connection Status Indicator */}
-        <div 
-          onClick={checkBackend}
-          title={`Backend API: ${isConnected ? 'Connected (Click to refresh)' : 'Disconnected (Click to retry)'}`}
-          className={`flex items-center space-x-2 px-2 py-1.5 rounded-lg border text-xs cursor-pointer select-none transition-colors hover:opacity-90 ${
-            isConnected
-              ? 'bg-emerald-500/10 text-emerald-300 border-emerald-500/30 hover:border-emerald-500/50'
-              : 'bg-rose-500/10 text-rose-300 border-rose-500/30 hover:border-rose-500/50'
-          }`}
-        >
-          <span className={`w-2 h-2 rounded-full ${isConnected ? 'bg-emerald-400' : 'bg-rose-400'}`}></span>
-          <span className="hidden sm:inline font-semibold">
-            {isConnected ? 'API Connected' : 'API Offline'}
-          </span>
-          <RefreshCw className={`w-3 h-3 text-slate-400 hover:text-white ${pinging ? 'animate-spin text-brand-purple-light' : ''}`} />
-        </div>
-
         {/* Notifications Dropdown Toggle */}
         <div className="relative">
           <button
@@ -165,7 +125,6 @@ export default function TopNavbar({ pageTitle = 'Dashboard', setMobileOpen }) {
             aria-label="Notifications"
           >
             <Bell className="w-4 h-4" />
-            <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-brand-blue"></span>
           </button>
 
           {/* Notifications Popover */}
@@ -173,18 +132,9 @@ export default function TopNavbar({ pageTitle = 'Dashboard', setMobileOpen }) {
             <div className="absolute right-0 mt-2 w-[min(20rem,calc(100vw-1.5rem))] rounded-xl bg-dark-900 border border-slate-800 p-4 z-50">
               <div className="flex items-center justify-between pb-3 border-b border-slate-800">
                 <span className="text-xs font-semibold text-white">Notifications</span>
-                <span className="text-[10px] text-brand-purple-light font-medium cursor-pointer hover:underline">Mark all read</span>
               </div>
-              <div className="mt-2 space-y-2">
-                {demoNotifications.map((n) => (
-                  <div key={n.id} className="p-2.5 rounded-lg bg-dark-850 hover:bg-dark-800 border border-slate-800 text-xs transition-colors cursor-pointer">
-                    <div className="flex items-center justify-between">
-                      <p className="font-semibold text-slate-200">{n.title}</p>
-                      {n.unread && <span className="w-1.5 h-1.5 rounded-full bg-brand-purple"></span>}
-                    </div>
-                    <span className="text-[10px] text-slate-500 mt-1 block">{n.time}</span>
-                  </div>
-                ))}
+              <div className="mt-3 py-4 text-center text-xs text-slate-400">
+                No notifications yet.
               </div>
             </div>
           )}
@@ -251,8 +201,7 @@ export default function TopNavbar({ pageTitle = 'Dashboard', setMobileOpen }) {
                 type="button"
                 role="menuitem"
                 onClick={() => {
-                  localStorage.removeItem('token');
-                  localStorage.removeItem('user');
+                  signOut();
                   setProfileMenuOpen(false);
                   navigate('/login', { replace: true });
                 }}

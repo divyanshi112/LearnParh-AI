@@ -56,6 +56,9 @@ export async function loginUser({ email, password }) {
     });
     const data = await response.json();
     if (response.ok) {
+      if (!data.success || typeof data.token !== 'string' || !data.token || !data.user) {
+        return { success: false, message: 'The server returned an incomplete sign-in response. Please try again.' };
+      }
       return { success: true, token: data.token, user: data.user };
     }
     return { success: false, message: data.message || 'Login failed' };

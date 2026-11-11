@@ -1,5 +1,12 @@
 import mongoose from 'mongoose';
-import { StudyTarget, Subject } from '../models/index.js';
+import {
+  QuizResult,
+  StudentProfile,
+  StudySession,
+  StudyTarget,
+  Subject,
+  User,
+} from '../models/index.js';
 
 const isValidObjectId = (value) => mongoose.Types.ObjectId.isValid(value);
 
@@ -8,6 +15,256 @@ const sendValidationError = (res, error) =>
 
 const getOwnedSubject = (subjectId, studentId) =>
   Subject.findOne({ _id: subjectId, student: studentId });
+
+export function dateKeyInTimeZone(value, timeZone) {
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).formatToParts(value);
+  const values = Object.fromEntries(parts.map(({ type, value: part }) => [type, part]));
+  return `${values.year}-${values.month}-${values.day}`;
+}
+
+export function addCalendarDays(dateKey, days) {
+  const date = new Date(`${dateKey}T00:00:00.000Z`);
+  date.setUTCDate(date.getUTCDate() + days);
+  return date.toISOString().slice(0, 10);
+}
+
+export function localMidnightAsUtc(dateKey, timeZone) {
+  const [year, month, day] = dateKey.split('-').map(Number);
+  const desiredWallClock = Date.UTC(year, month - 1, day);
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hourCycle: 'h23',
+  }).formatToParts(new Date(desiredWallClock));
+  const values = Object.fromEntries(parts.map(({ type, value }) => [type, Number(value)]));
+  const representedWallClock = Date.UTC(
+    values.year,
+    values.month - 1,
+    values.day,
+    values.hour,
+    values.minute,
+    values.second
+  );
+  return new Date(desiredWallClock - (representedWallClock - desiredWallClock));
+}
+
+export const getDashboardSummary = async (req, res) => {
+  if (req.user.role !== 'student') {
+    return res.status(403).json({ success: false, message: 'Only student accounts can access the dashboard' });
+  }
+
+  const studentId = new mongoose.Types.ObjectId(req.user.id);
+  const timeZone = typeof req.query.timeZone === 'string'
+    ? req.query.timeZone
+    : Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
+  try {
+    new Intl.DateTimeFormat('en-US', { timeZone }).format(new Date());
+  } catch {
+    return res.status(400).json({ success: false, message: 'A valid local time zone is required.' });
+  }
+  const todayKey = dateKeyInTimeZone(new Date(), timeZone);
+  const weekday = new Date(`${todayKey}T00:00:00.000Z`).getUTCDay();
+  const weekStartKey = addCalendarDays(todayKey, -((weekday + 6) % 7));
+  const weekEndKey = addCalendarDays(weekStartKey, 7);
+  const startOfToday = localMidnightAsUtc(todayKey, timeZone);
+  const endOfToday = localMidnightAsUtc(addCalendarDays(todayKey, 1), timeZone);
+  const startOfWeek = localMidnightAsUtc(weekStartKey, timeZone);
+  const endOfWeek = localMidnightAsUtc(weekEndKey, timeZone);
+
+  const [account, profile, subjects, todayTargets, sessionTimeByDay, quizSummary, weeklyQuizCounts] =
+    await Promise.all([
+      User.findById(studentId).select('name email').lean(),
+      StudentProfile.findOne({ user: studentId })
+        .select('fullName profilePicture academicTrack targetExamDate dailyStudyTarget')
+        .lean(),
+      Subject.find({ student: studentId })
+        .select('name topics._id topics.name topics.status')
+        .sort({ name: 1 })
+        .lean(),
+      StudyTarget.find({
+        student: studentId,
+        targetDate: { $gte: startOfToday, $lt: endOfToday },
+      })
+        .populate({ path: 'subject', select: 'name', match: { student: studentId } })
+        .sort({ targetDate: 1, createdAt: 1 })
+        .lean(),
+      StudySession.aggregate([
+        {
+          $match: {
+            userId: studentId,
+            status: 'completed',
+            startTime: { $gte: startOfWeek, $lt: endOfWeek },
+          },
+        },
+        {
+          $group: {
+            _id: {
+              $dateToString: {
+                format: '%Y-%m-%d',
+                date: '$startTime',
+                timezone: timeZone,
+              },
+            },
+            durationSeconds: { $sum: '$durationSeconds' },
+          },
+        },
+      ]),
+      QuizResult.aggregate([
+        { $match: { student: studentId } },
+        {
+          $group: {
+            _id: null,
+            attempts: { $sum: 1 },
+            correctAnswers: { $sum: '$correctAnswers' },
+            totalQuestions: { $sum: '$totalQuestions' },
+          },
+        },
+      ]),
+      QuizResult.aggregate([
+        {
+          $match: {
+            student: studentId,
+            completedAt: { $gte: startOfWeek, $lt: endOfWeek },
+          },
+        },
+        {
+          $group: {
+            _id: {
+              $dateToString: {
+                format: '%Y-%m-%d',
+                date: '$completedAt',
+                timezone: timeZone,
+              },
+            },
+            count: { $sum: 1 },
+          },
+        },
+      ]),
+    ]);
+
+  if (!account) {
+    return res.status(404).json({ success: false, message: 'Student account not found' });
+  }
+
+  const subjectsWithProgress = subjects.map((subject) => {
+    const topics = subject.topics || [];
+    const completedTopics = topics.filter((topic) => topic.status === 'Completed').length;
+    const pendingTopics = topics.filter(
+      (topic) => topic.status !== 'Completed' && topic.status !== 'In Progress'
+    ).length;
+    const inProgressTopics = topics.filter((topic) => topic.status === 'In Progress').length;
+
+    return {
+      id: subject._id,
+      name: subject.name,
+      totalTopics: topics.length,
+      completedTopics,
+      pendingTopics,
+      inProgressTopics,
+      completionPercentage: topics.length
+        ? Math.round((completedTopics / topics.length) * 100)
+        : 0,
+      topics: topics.map((topic) => ({
+        id: topic._id,
+        name: topic.name,
+        status: topic.status,
+      })),
+    };
+  });
+
+  const allTopics = subjectsWithProgress.flatMap((subject) =>
+    subject.topics.map((topic) => ({ ...topic, subject: subject.name }))
+  );
+  const totalTopics = allTopics.length;
+  const completedTopics = allTopics.filter((topic) => topic.status === 'Completed').length;
+  const pendingTopics = allTopics.filter(
+    (topic) => topic.status !== 'Completed' && topic.status !== 'In Progress'
+  ).length;
+  const inProgressTopics = allTopics.filter((topic) => topic.status === 'In Progress').length;
+  const dailyTargets = todayTargets.map((target) => ({
+    id: target._id,
+    title: target.title,
+    targetDate: target.targetDate,
+    completed: target.completed,
+    subject: target.subject?.name || null,
+  }));
+  const completedTargets = dailyTargets.filter((target) => target.completed).length;
+  const quizTotals = quizSummary[0] || { attempts: 0, correctAnswers: 0, totalQuestions: 0 };
+  const studySecondsByDate = new Map(
+    sessionTimeByDay.map((record) => [record._id, record.durationSeconds || 0])
+  );
+  const quizzesByDate = new Map(weeklyQuizCounts.map((record) => [record._id, record.count]));
+  const weeklyActivity = Array.from({ length: 7 }, (_, index) => {
+    const dateKey = addCalendarDays(weekStartKey, index);
+    const date = new Date(localMidnightAsUtc(dateKey, timeZone).getTime() + 12 * 60 * 60 * 1000);
+    return {
+      date: dateKey,
+      day: new Intl.DateTimeFormat('en-US', { timeZone, weekday: 'short' }).format(date),
+      hours: (studySecondsByDate.get(dateKey) || 0) / 3600,
+      target: profile?.dailyStudyTarget ?? null,
+      quizzes: quizzesByDate.get(dateKey) || 0,
+    };
+  });
+
+  return res.json({
+    success: true,
+    data: {
+      student: {
+        name: profile?.fullName || account.name,
+        email: account.email,
+        profilePicture: profile?.profilePicture || '',
+        academicTrack: profile?.academicTrack || '',
+        targetExamDate: profile?.targetExamDate || null,
+        dailyStudyTarget: profile?.dailyStudyTarget ?? null,
+      },
+      studyPlan: {
+        totalSubjects: subjectsWithProgress.length,
+        totalTopics,
+        completedTopics,
+        pendingTopics,
+        inProgressTopics,
+        completionPercentage: totalTopics ? Math.round((completedTopics / totalTopics) * 100) : 0,
+        subjects: subjectsWithProgress,
+        nextTopics: allTopics
+          .filter((topic) => topic.status !== 'Completed')
+          .sort((left, right) => {
+            if (left.status === right.status) return left.name.localeCompare(right.name);
+            return left.status === 'In Progress' ? -1 : 1;
+          })
+          .slice(0, 3),
+      },
+      today: {
+        date: startOfToday.toISOString(),
+        studyHoursLogged: (studySecondsByDate.get(todayKey) || 0) / 3600,
+        targets: dailyTargets,
+        completedTargets,
+        totalTargets: dailyTargets.length,
+        completionPercentage: dailyTargets.length
+          ? Math.round((completedTargets / dailyTargets.length) * 100)
+          : 0,
+      },
+      quizSummary: {
+        attempts: quizTotals.attempts,
+        correctAnswers: quizTotals.correctAnswers,
+        totalQuestions: quizTotals.totalQuestions,
+        accuracyPercentage: quizTotals.totalQuestions
+          ? Math.round((quizTotals.correctAnswers / quizTotals.totalQuestions) * 100)
+          : null,
+      },
+      weeklyActivity,
+    },
+  });
+};
 
 const validateSubjectInput = ({ name, description }, partial = false) => {
   const errors = {};
@@ -123,7 +380,7 @@ export const updateSubject = async (req, res) => {
     const subject = await Subject.findOneAndUpdate(
       { _id: req.params.subjectId, student: req.user.id },
       { $set: updates },
-      { new: true, runValidators: true }
+      { returnDocument: 'after', runValidators: true }
     );
     if (!subject) return res.status(404).json({ success: false, message: 'Subject not found' });
     return res.json({ success: true, subject });

@@ -120,9 +120,39 @@ npm run dev
 | `/` | **Dashboard** | Main overview: 4 stat cards, weekly activity chart, daily goals checklist, AI recommendations, live API health inspector |
 | `/study-plan` | **My Study Plan** | Syllabus roadmap with progress meters and milestone tracking |
 | `/ai-tutor` | **AI Tutor** | Interactive conversational tutoring interface with prompt suggestions |
-| `/quizzes` | **Practice Quizzes** | Adaptive testing catalog with question counts, time limits, and scores |
+| `/quizzes` | **Practice Quizzes** | Gemini-generated MCQ quizzes from study-plan subjects and topics, with grading and answer history |
+| `/study-materials` | **Study Materials** | Upload, view, and delete your own PDF study materials |
 | `/progress` | **My Progress** | Deep retention analytics, study hours, and topic mastery ratings |
 | `/settings` | **Settings** | Student profile, track configuration, and study schedule preferences |
+
+## Practice Quiz API
+
+The authenticated quiz endpoints use the existing study-plan `Subject` records and Gemini configuration (`GEMINI_API_KEY` and `GEMINI_MODEL`). Quiz answer keys remain on the backend until submission.
+
+| Method | Endpoint | Description |
+| :--- | :--- | :--- |
+| `POST` | `/api/quizzes/generate` | Generate a quiz from `{ subjectId, topicIds, difficulty, questionCount }`; difficulty is `Easy`, `Medium`, or `Hard`, and question count is 5, 10, or 15 |
+| `POST` | `/api/quizzes/submit` | Submit `{ quizId, answers: [{ questionId, selectedOption }] }`; scores are calculated by the backend |
+| `GET` | `/api/quizzes/history` | List the authenticated student's saved attempts and answer explanations |
+
+Quiz sessions are stored temporarily in MongoDB and expire after 24 hours. Generated questions are associated with their selected study-plan topics, and submitted attempts store the topic ID for every evaluated answer.
+
+## Adaptive Learning Recommendations
+
+The authenticated `GET /api/recommendations` endpoint analyzes the student's saved quiz scores and per-answer topic attribution, classifies assessed topics as weak (under 60%), moderate (60–79%), or strong (80% or higher), and uses Gemini to suggest revision actions. Recommended next-quiz difficulty is Easy for weak performance, Medium for moderate performance, and Hard when only strong topics have been assessed. Analytics and recommendations are cached in the student's `LearningRecommendation` record and recalculated when their quizzes or study plan change. Existing single-topic attempts can be attributed by their saved topic name; multi-topic attempts without per-answer attribution contribute to overall scores but are not guessed into topic-level results.
+
+The dashboard loads the current student's recommendation record. The endpoint returns actual quiz totals, average score, accuracy, per-topic counts and classifications, Gemini revision actions, and the next suggested difficulty. With no assessed quiz data it returns an empty recommendation list and the dashboard prompts the student to complete a quiz.
+
+## Study Materials API
+
+All study-material endpoints require an authenticated student JWT. PDF uploads are limited to 10 MB and 500 pages; the original PDF is stored in GridFS on the existing MongoDB connection, and selectable text plus document metadata are stored in the `StudyMaterial` collection. Every list, view, and delete operation is scoped to the authenticated student. Scanned PDFs without selectable text are not supported in this stage.
+
+| Method | Endpoint | Description |
+| :--- | :--- | :--- |
+| `GET` | `/api/study-materials` | List the authenticated student's uploaded documents |
+| `POST` | `/api/study-materials` | Upload multipart fields `file` (PDF) and `subjectId` |
+| `GET` | `/api/study-materials/:documentId/file` | View the authenticated student's PDF |
+| `DELETE` | `/api/study-materials/:documentId` | Delete the authenticated student's PDF and metadata |
 
 ## Student Profile API
 

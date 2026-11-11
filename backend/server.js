@@ -7,6 +7,10 @@ import authRoutes from './routes/auth.routes.js';
 import profileRoutes from './routes/profile.routes.js';
 import studyPlanRoutes from './routes/studyPlan.routes.js';
 import aiRoutes from './routes/ai.routes.js';
+import quizRoutes from './routes/quiz.routes.js';
+import recommendationRoutes from './routes/recommendation.routes.js';
+import studyMaterialRoutes from './routes/studyMaterial.routes.js';
+import studySessionRoutes from './routes/studySession.routes.js';
 import testDBRoutes from './routes/testDB.routes.js';
 import { notFound, errorHandler } from './middleware/error.middleware.js';
 
@@ -55,6 +59,10 @@ app.use('/api/auth', authRoutes);
 app.use('/api/profile', profileRoutes);
 app.use('/api/study-plan', studyPlanRoutes);
 app.use('/api/ai', aiRoutes);
+app.use('/api/quizzes', quizRoutes);
+app.use('/api/recommendations', recommendationRoutes);
+app.use('/api/study-materials', studyMaterialRoutes);
+app.use('/api/study-sessions', studySessionRoutes);
 
 // Root informational endpoint
 app.get('/', (req, res) => {
