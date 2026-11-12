@@ -191,6 +191,7 @@ Example create request:
 }
 ```
 
-The profile also supports an optional `profilePicture` data URL (JPEG, PNG, or WebP, up to 512 KB), `gender`, `dateOfBirth`, `cgpa`, `linkedinUrl`, and `githubUrl`. `targetExamDate` and `subjects` are optional; subjects default to an empty list. Topic status must be `pending`, `in-progress`, or `completed`. `dailyStudyTarget` is measured in hours and must be between `0.25` and `24`. `GET /api/profile` includes the account name and email and returns `profile: null` until a profile is created. The authenticated user ID is taken from the JWT, not from the request body. Configure `JWT_SECRET` in the backend environment before using these protected endpoints.
-#   L e a r n P a r h - A I  
+The profile  supports an optional `profilePicture` data URL (JPEG, PNG, or WebP, up to 512 KB), `gender`, `dateOfBirth`, `cgpa`, `linkedinUrl`, and `githubUrl`. `targetExamDate` and `subjects` are optional; subjects default to an empty list. Topic status must be `pending`, `in-progress`, or `completed`. `dailyStudyTarget` is measured in hours and must be between `0.25` and `24`. `GET /api/profile` includes the account name and email and returns `profile: null` until a profile is created. The authenticated user ID is taken from the JWT, not from the request body. Configure `JWT_SECRET` in the backend environment before using these protected endpoints.
+#   L e a r n P a r h - A I 
+ 
  
