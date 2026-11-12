@@ -34,6 +34,7 @@ app.use(cors({
       'http://127.0.0.1:5173',
       'http://localhost:5178',
       'http://127.0.0.1:5178',
+      'https://learnparh-ai.vercel.app'
     ];
     if (!origin || whitelist.includes(origin)) {
       callback(null, true);
