@@ -1,7 +1,7 @@
 import 'dotenv/config';
 import express from 'express';
-import cors from 'cors';
 import connectDB from './config/db.js';
+import corsMiddleware from './middleware/cors.middleware.js';
 import healthRoutes from './routes/health.routes.js';
 import authRoutes from './routes/auth.routes.js';
 import profileRoutes from './routes/profile.routes.js';
@@ -16,38 +16,8 @@ import { notFound, errorHandler } from './middleware/error.middleware.js';
 
 const app = express();
 const PORT = process.env.PORT || 5000;
-const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:5173';
-const allowedOrigins = [
-  CLIENT_URL,
-  'http://localhost:5173',
-  'http://127.0.0.1:5173',
-  'http://localhost:5178',
-  'http://127.0.0.1:5178'
-];
 
-// Configure Cross-Origin Resource Sharing (CORS)
-app.use(cors({
-  origin: (origin, callback) => {
-    const whitelist = [
-      process.env.CLIENT_URL || 'http://localhost:5173',
-      'http://localhost:5173',
-      'http://127.0.0.1:5173',
-      'http://localhost:5178',
-      'http://127.0.0.1:5178',
-      'https://learnparh-ai.vercel.app'
-    ];
-    if (!origin || whitelist.includes(origin)) {
-      callback(null, true);
-    } else {
-      // reject silently – CORS will not set Access‑Control‑Allow‑Origin
-      callback(null, false);
-    }
-  },
-  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: true,
-  optionsSuccessStatus: 200,
-}));
+app.use(corsMiddleware);
 
 // Body parsing middleware
 app.use(express.json({ limit: '1mb' }));
