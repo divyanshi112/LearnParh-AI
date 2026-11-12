@@ -6,6 +6,7 @@ import {
   parseRecommendations,
 } from '../services/recommendation.service.js';
 import { parseGeneratedQuiz } from '../controllers/quiz.controller.js';
+import LearningRecommendation from '../models/LearningRecommendation.js';
 
 const subjectId = '507f1f77bcf86cd799439011';
 const weakTopicId = '507f1f77bcf86cd799439012';
@@ -86,6 +87,68 @@ test('aggregates real quiz outcomes and classifies study-plan topics', () => {
       { topicName: 'File Systems', accuracy: null, level: 'unassessed' },
     ]
   );
+});
+
+test('averages completed attempt percentages separately from overall accuracy', () => {
+  const performance = analyzeQuizPerformance([], [
+    {
+      _id: 'attempt-1',
+      totalQuestions: 5,
+      correctAnswers: 2,
+      incorrectAnswers: 3,
+      score: 0.4,
+      maxScore: 1,
+    },
+    {
+      _id: 'attempt-2',
+      totalQuestions: 10,
+      correctAnswers: 5,
+      incorrectAnswers: 5,
+      scorePercentage: 50,
+    },
+    {
+      _id: 'attempt-3',
+      totalQuestions: 5,
+      answers: [true, true, false, false, false].map((isCorrect) => ({ isCorrect })),
+    },
+    {
+      _id: 'incomplete-attempt',
+      status: 'in-progress',
+      totalQuestions: 100,
+      correctAnswers: 100,
+      scorePercentage: 100,
+    },
+  ]);
+
+  assert.equal(performance.totalAttempts, 3);
+  assert.equal(performance.totalQuestions, 20);
+  assert.equal(performance.correctAnswers, 9);
+  assert.equal(performance.incorrectAnswers, 11);
+  assert.equal(performance.averageScore, 43);
+  assert.equal(performance.overallAccuracy, 45);
+});
+
+test('normalizes fractional score percentages and handles missing or zero score data', () => {
+  const fractional = analyzeQuizPerformance([], [{
+    _id: 'fractional-score',
+    scorePercentage: 0.45,
+  }]);
+  const noAttempts = analyzeQuizPerformance([], []);
+  const zeroMaximum = analyzeQuizPerformance([], [{
+    _id: 'zero-maximum',
+    score: 1,
+    maxScore: 0,
+    scorePercentage: null,
+  }]);
+
+  assert.equal(fractional.averageScore, 45);
+  assert.equal(noAttempts.averageScore, null);
+  assert.equal(noAttempts.overallAccuracy, null);
+  assert.equal(zeroMaximum.averageScore, null);
+});
+
+test('stores average score in recommendation analytics', () => {
+  assert.ok(LearningRecommendation.schema.path('analytics.averageScore'));
 });
 
 test('attributes legacy single-topic answers but does not guess multi-topic attribution', () => {
@@ -221,6 +284,10 @@ test('source fingerprint changes with quiz or study-plan updates', () => {
   );
   assert.notEqual(
     createSourceFingerprint([{ ...subjects[0], updatedAt: new Date('2026-11-11T00:00:00Z') }], results),
+    fingerprint
+  );
+  assert.notEqual(
+    createSourceFingerprint(subjects, [{ ...results[0], score: 50, maxScore: 100 }]),
     fingerprint
   );
 });

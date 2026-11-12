@@ -1,7 +1,6 @@
 import mongoose from 'mongoose';
 import { StudySession, Subject } from '../models/index.js';
 
-const STALE_HEARTBEAT_MS = 45_000;
 const MAX_SESSION_SECONDS = 24 * 60 * 60;
 
 function isStudent(req, res) {
@@ -20,11 +19,14 @@ function sessionResponse(session, now = new Date()) {
     + (result.status === 'running' && result.segmentStartedAt
       ? Math.max(0, Math.floor((now.getTime() - new Date(result.segmentStartedAt).getTime()) / 1000))
       : 0);
+  const runningSince = result.status === 'running' && result.segmentStartedAt
+    ? new Date(result.segmentStartedAt).toISOString()
+    : null;
   delete result.activeSlot;
   delete result.segmentStartedAt;
   delete result.heartbeatAt;
   delete result.entryKey;
-  return { ...result, elapsedSeconds };
+  return { ...result, elapsedSeconds, runningSince };
 }
 
 async function findOwnedSubjectTopic(subjectId, topicId, studentId) {
@@ -40,40 +42,8 @@ async function findOwnedSubjectTopic(subjectId, topicId, studentId) {
   return { subject, topic };
 }
 
-async function pauseExpiredSession(session, now) {
-  if (
-    session.status !== 'running' ||
-    !session.heartbeatAt ||
-    now.getTime() - session.heartbeatAt.getTime() <= STALE_HEARTBEAT_MS
-  ) return session;
-
-  const lastActiveAt = Math.min(
-    session.heartbeatAt.getTime(),
-    now.getTime(),
-    session.segmentStartedAt?.getTime() ?? now.getTime()
-  );
-  const segmentSeconds = session.segmentStartedAt
-    ? Math.max(0, Math.floor((lastActiveAt - session.segmentStartedAt.getTime()) / 1000))
-    : 0;
-  const updated = await StudySession.findOneAndUpdate(
-    { _id: session._id, userId: session.userId, status: 'running' },
-    {
-      $set: {
-        status: 'paused',
-        durationSeconds: Math.min(MAX_SESSION_SECONDS, session.durationSeconds + segmentSeconds),
-        segmentStartedAt: null,
-        heartbeatAt: null,
-      },
-    },
-    { returnDocument: 'after' }
-  );
-  return updated || StudySession.findById(session._id);
-}
-
 async function getActiveSession(userId) {
-  const session = await StudySession.findOne({ userId, activeSlot: userId });
-  if (!session) return null;
-  return pauseExpiredSession(session, new Date());
+  return StudySession.findOne({ userId, activeSlot: userId });
 }
 
 export async function getCurrentStudySession(req, res) {
@@ -113,7 +83,6 @@ export async function startStudySession(req, res) {
       status: 'running',
       activeSlot: req.user.id,
       segmentStartedAt: now,
-      heartbeatAt: now,
     });
     return res.status(201).json({ success: true, session: sessionResponse(session, now) });
   } catch (error) {
@@ -138,7 +107,7 @@ export async function updateStudySessionState(req, res) {
     return res.status(404).json({ success: false, message: 'Study session action not found.' });
   }
 
-  let session = await StudySession.findOne({
+  const session = await StudySession.findOne({
     _id: sessionId,
     userId: req.user.id,
     activeSlot: req.user.id,
@@ -152,7 +121,6 @@ export async function updateStudySessionState(req, res) {
   }
 
   const now = new Date();
-  session = await pauseExpiredSession(session, now);
   if (action === 'heartbeat') {
     if (session.status !== 'running') {
       return res.json({ success: true, session: sessionResponse(session, now) });
@@ -199,7 +167,7 @@ export async function updateStudySessionState(req, res) {
     }
     const updated = await StudySession.findOneAndUpdate(
       { _id: sessionId, userId: req.user.id, status: 'paused' },
-      { $set: { status: 'running', segmentStartedAt: now, heartbeatAt: now } },
+      { $set: { status: 'running', segmentStartedAt: now } },
       { returnDocument: 'after' }
     );
     if (updated) return res.json({ success: true, session: sessionResponse(updated, now) });

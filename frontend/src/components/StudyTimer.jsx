@@ -25,12 +25,13 @@ const makeEntryKey = () => (
 
 export default function StudyTimer({ subjects = [], onSessionSaved }) {
   const [session, setSession] = useState(null);
-  const [elapsedSeconds, setElapsedSeconds] = useState(0);
+  const [clockNow, setClockNow] = useState(() => performance.now());
   const [subjectId, setSubjectId] = useState('');
   const [topicId, setTopicId] = useState('');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const actionInProgress = useRef(false);
+  const elapsedAnchor = useRef({ seconds: 0, startedAt: null });
   const [manualOpen, setManualOpen] = useState(false);
   const manualEntryKey = useRef('');
   const [manualStartTime, setManualStartTime] = useState(
@@ -44,16 +45,30 @@ export default function StudyTimer({ subjects = [], onSessionSaved }) {
   const topics = selectedSubject?.topics || [];
   const selectedTopic = topics.find((topic) => String(topic._id || topic.id) === topicId);
   const active = session?.status === 'running' || session?.status === 'paused';
+  const runningSince = session?.status === 'running' ? session.runningSince : null;
+  const elapsedSeconds = session?.status === 'running' && runningSince
+    ? elapsedAnchor.current.seconds
+      + Math.max(0, Math.floor((clockNow - elapsedAnchor.current.startedAt) / 1000))
+    : session?.elapsedSeconds || 0;
   const displayedSubjectId = session ? String(session.subject) : subjectId;
   const displayedTopicId = session ? String(session.topic) : topicId;
+
+  const setTimerSession = useCallback((nextSession) => {
+    const now = performance.now();
+    elapsedAnchor.current = {
+      seconds: Number(nextSession?.elapsedSeconds ?? nextSession?.durationSeconds ?? 0),
+      startedAt: nextSession?.status === 'running' ? now : null,
+    };
+    setClockNow(now);
+    setSession(nextSession);
+  }, []);
 
   const loadActiveSession = useCallback(async () => {
     setLoading(true);
     setError('');
     try {
       const current = await getCurrentStudySession();
-      setSession(current);
-      setElapsedSeconds(current?.elapsedSeconds || 0);
+      setTimerSession(current);
       if (current) {
         setSubjectId(String(current.subject));
         setTopicId(String(current.topic));
@@ -63,32 +78,19 @@ export default function StudyTimer({ subjects = [], onSessionSaved }) {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [setTimerSession]);
 
   useEffect(() => {
     loadActiveSession();
   }, [loadActiveSession]);
 
   useEffect(() => {
-    if (session?.status !== 'running') return undefined;
-    const tick = window.setInterval(() => setElapsedSeconds((value) => value + 1), 1000);
-    const heartbeat = window.setInterval(async () => {
-      try {
-        const updated = await updateStudySession(session._id, 'heartbeat');
-        setSession(updated);
-        setElapsedSeconds(updated.elapsedSeconds || 0);
-        if (updated.status !== 'running') {
-          setNotice('Your timer was paused after being inactive. Resume when you are ready.');
-        }
-      } catch (requestError) {
-        setError(requestError.message || 'The study timer could not save its active state.');
-      }
-    }, 15_000);
+    if (!runningSince) return undefined;
+    const tick = window.setInterval(() => setClockNow(performance.now()), 1000);
     return () => {
       window.clearInterval(tick);
-      window.clearInterval(heartbeat);
     };
-  }, [session?._id, session?.status]);
+  }, [runningSince]);
 
   const handleStart = async () => {
     if (actionInProgress.current || saving) return;
@@ -102,8 +104,7 @@ export default function StudyTimer({ subjects = [], onSessionSaved }) {
     setNotice('');
     try {
       const started = await startStudySession(subjectId, topicId);
-      setSession(started);
-      setElapsedSeconds(started.elapsedSeconds || 0);
+      setTimerSession(started);
     } catch (requestError) {
       setError(requestError.message || 'Could not start this study session.');
       if (requestError.status === 409) await loadActiveSession();
@@ -122,13 +123,11 @@ export default function StudyTimer({ subjects = [], onSessionSaved }) {
     try {
       const updated = await updateStudySession(session._id, action);
       if (action === 'finish') {
-        setSession(null);
-        setElapsedSeconds(0);
+        setTimerSession(null);
         setNotice(`Study session saved: ${updated.durationMinutes} minutes on ${updated.topicName}.`);
         await onSessionSaved?.(updated);
       } else {
-        setSession(updated);
-        setElapsedSeconds(updated.elapsedSeconds || 0);
+        setTimerSession(updated);
       }
     } catch (requestError) {
       setError(requestError.message || 'Could not update this study session.');

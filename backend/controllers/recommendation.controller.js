@@ -66,7 +66,7 @@ async function computeLearningRecommendations(studentId) {
       .sort({ name: 1 })
       .lean(),
     QuizResult.find({ student: studentId })
-      .select('subjectId topics totalQuestions correctAnswers incorrectAnswers scorePercentage answers.topicId answers.isCorrect completedAt')
+      .select('subjectId topics totalQuestions correctAnswers incorrectAnswers score scorePercentage maxScore maximumScore answers.topicId answers.isCorrect completedAt')
       .sort({ completedAt: -1 })
       .lean(),
     LearningRecommendation.findOne({ student: studentId }).lean(),
@@ -85,6 +85,7 @@ async function computeLearningRecommendations(studentId) {
 
   if (
     cachedRecord?.sourceFingerprint === sourceFingerprint
+    && cachedRecord.analytics?.averageScore === performance.averageScore
     && (!performance.assessedTopics.length || cachedRecord.recommendations.length > 0)
   ) {
     return {

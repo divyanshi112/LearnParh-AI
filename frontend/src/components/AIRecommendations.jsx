@@ -24,6 +24,12 @@ const PRIORITY_STYLES = {
   low: 'border-slate-700 bg-dark-800 text-slate-400',
 };
 
+const formatPercentage = (value) => {
+  if (value === null || value === undefined || value === '') return '—';
+  const percentage = Number(value);
+  return Number.isFinite(percentage) ? `${percentage}%` : '—';
+};
+
 export default function AIRecommendations({ topics = [] }) {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -103,7 +109,7 @@ export default function AIRecommendations({ topics = [] }) {
               ['Quiz attempts', analytics.totalAttempts],
               ['Questions', analytics.totalQuestions],
               ['Correct / incorrect', `${analytics.correctAnswers} / ${analytics.incorrectAnswers}`],
-              ['Average score', analytics.averageScore === null ? '—' : `${analytics.averageScore}%`],
+              ['Average score', formatPercentage(analytics.averageScore)],
             ].map(([label, value]) => (
               <div key={label} className="rounded-lg border border-slate-800 bg-dark-850 p-3">
                 <p className="text-[11px] text-slate-500">{label}</p>
@@ -116,7 +122,7 @@ export default function AIRecommendations({ topics = [] }) {
             <p className="text-sm text-slate-300">
               Overall quiz accuracy:{' '}
               <span className="font-semibold text-white">
-                {analytics.overallAccuracy === null ? '—' : `${analytics.overallAccuracy}%`}
+                {formatPercentage(analytics.overallAccuracy)}
               </span>
             </p>
             <p className="text-sm text-slate-300">

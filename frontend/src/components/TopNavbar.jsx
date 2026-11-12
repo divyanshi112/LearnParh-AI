@@ -2,9 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   Menu, 
-  Search, 
   Bell, 
-  Command,
   ChevronDown,
   UserRound,
   Pencil,
@@ -12,6 +10,7 @@ import {
 } from 'lucide-react';
 import { getStudentProfile } from '../services/api';
 import { useAuth } from '../contexts/AuthContext.jsx';
+import GlobalSearch from './GlobalSearch.jsx';
 
 const readStoredUser = () => {
   try {
@@ -31,7 +30,6 @@ export default function TopNavbar({ pageTitle = 'Dashboard', setMobileOpen }) {
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const [student, setStudent] = useState(() => ({ user: readStoredUser(), profile: null }));
-  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     let active = true;
@@ -76,9 +74,9 @@ export default function TopNavbar({ pageTitle = 'Dashboard', setMobileOpen }) {
   const profilePicture = student.profile?.profilePicture;
 
   return (
-    <header className="sticky top-0 z-20 min-h-16 bg-dark-950 border-b border-slate-800 px-3 sm:px-6 lg:px-8 flex items-center justify-between gap-3">
+    <header className="sticky top-0 z-20 min-h-16 bg-dark-950 border-b border-slate-800 px-3 sm:px-6 lg:px-8 flex flex-wrap items-center justify-between gap-3">
       {/* Left: Mobile Menu Button & Dynamic Page Title */}
-      <div className="flex items-center space-x-3">
+      <div className="order-1 flex items-center space-x-3">
         <button
           onClick={() => setMobileOpen(true)}
           className="lg:hidden p-2 rounded-lg text-slate-400 hover:text-white hover:bg-dark-800 transition-colors"
@@ -95,28 +93,12 @@ export default function TopNavbar({ pageTitle = 'Dashboard', setMobileOpen }) {
       </div>
 
       {/* Center: Search Field */}
-      <div className="hidden md:flex items-center flex-1 max-w-md mx-6">
-        <div className="relative w-full">
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500">
-            <Search className="w-4 h-4" />
-          </div>
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search study topics, quizzes, modules..."
-            className="field-control w-full pl-9 pr-12 py-2 text-xs"
-          />
-          <div className="absolute inset-y-0 right-0 pr-2.5 flex items-center pointer-events-none">
-            <kbd className="hidden sm:inline-flex items-center space-x-0.5 px-1.5 py-0.5 text-[10px] font-mono text-slate-500 bg-dark-800 rounded border border-slate-700">
-              <Command className="w-2.5 h-2.5 mr-0.5" /> K
-            </kbd>
-          </div>
-        </div>
+      <div className="order-2 flex basis-full items-center md:order-2 md:min-w-0 md:flex-1 md:basis-auto md:justify-center">
+        <GlobalSearch />
       </div>
 
       {/* Right: Actions & Profile */}
-      <div className="flex items-center gap-1 sm:gap-3">
+      <div className="order-3 flex items-center gap-1 sm:gap-3">
         {/* Notifications Dropdown Toggle */}
         <div className="relative">
           <button

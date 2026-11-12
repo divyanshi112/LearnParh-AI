@@ -102,7 +102,7 @@ export const getDashboardSummary = async (req, res) => {
         {
           $match: {
             userId: studentId,
-            status: 'completed',
+            status: { $in: ['completed', 'paused', 'running'] },
             startTime: { $gte: startOfWeek, $lt: endOfWeek },
           },
         },
@@ -116,6 +116,7 @@ export const getDashboardSummary = async (req, res) => {
               },
             },
             durationSeconds: { $sum: '$durationSeconds' },
+            sessions: { $sum: 1 },
           },
         },
       ]),
@@ -200,17 +201,22 @@ export const getDashboardSummary = async (req, res) => {
   }));
   const completedTargets = dailyTargets.filter((target) => target.completed).length;
   const quizTotals = quizSummary[0] || { attempts: 0, correctAnswers: 0, totalQuestions: 0 };
-  const studySecondsByDate = new Map(
-    sessionTimeByDay.map((record) => [record._id, record.durationSeconds || 0])
+  const studyByDate = new Map(
+    sessionTimeByDay.map((record) => [record._id, {
+      durationSeconds: record.durationSeconds || 0,
+      sessions: record.sessions || 0,
+    }])
   );
   const quizzesByDate = new Map(weeklyQuizCounts.map((record) => [record._id, record.count]));
   const weeklyActivity = Array.from({ length: 7 }, (_, index) => {
     const dateKey = addCalendarDays(weekStartKey, index);
     const date = new Date(localMidnightAsUtc(dateKey, timeZone).getTime() + 12 * 60 * 60 * 1000);
+    const study = studyByDate.get(dateKey);
     return {
       date: dateKey,
       day: new Intl.DateTimeFormat('en-US', { timeZone, weekday: 'short' }).format(date),
-      hours: (studySecondsByDate.get(dateKey) || 0) / 3600,
+      hours: (study?.durationSeconds || 0) / 3600,
+      sessions: study?.sessions || 0,
       target: profile?.dailyStudyTarget ?? null,
       quizzes: quizzesByDate.get(dateKey) || 0,
     };
@@ -245,7 +251,7 @@ export const getDashboardSummary = async (req, res) => {
       },
       today: {
         date: startOfToday.toISOString(),
-        studyHoursLogged: (studySecondsByDate.get(todayKey) || 0) / 3600,
+        studyHoursLogged: (studyByDate.get(todayKey)?.durationSeconds || 0) / 3600,
         targets: dailyTargets,
         completedTargets,
         totalTargets: dailyTargets.length,

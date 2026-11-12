@@ -6,6 +6,66 @@ const nextDifficultyByLevel = {
   strong: 'Hard',
 };
 
+function nonNegativeNumber(value) {
+  if (value === null || value === undefined || value === '') return null;
+  const number = Number(value);
+  return Number.isFinite(number) && number >= 0 ? number : null;
+}
+
+function getAttemptStatistics(result) {
+  const answers = Array.isArray(result.answers) ? result.answers : [];
+  const validAnswers = answers.filter((answer) => typeof answer?.isCorrect === 'boolean');
+  let totalQuestions = nonNegativeNumber(result.totalQuestions);
+  let correctAnswers = nonNegativeNumber(result.correctAnswers);
+
+  if (totalQuestions === null || totalQuestions === 0) {
+    totalQuestions = validAnswers.length || null;
+  }
+  if (correctAnswers === null && validAnswers.length) {
+    correctAnswers = validAnswers.filter((answer) => answer.isCorrect).length;
+  }
+  if (correctAnswers === null && totalQuestions !== null) {
+    const incorrectAnswers = nonNegativeNumber(result.incorrectAnswers);
+    if (incorrectAnswers !== null && incorrectAnswers <= totalQuestions) {
+      correctAnswers = totalQuestions - incorrectAnswers;
+    }
+  }
+  if (
+    totalQuestions === null ||
+    totalQuestions === 0 ||
+    correctAnswers === null ||
+    correctAnswers > totalQuestions
+  ) {
+    return null;
+  }
+
+  return {
+    totalQuestions,
+    correctAnswers,
+    incorrectAnswers: totalQuestions - correctAnswers,
+  };
+}
+
+function getAttemptPercentage(result, statistics) {
+  const score = nonNegativeNumber(result.score);
+  const maximumScore = nonNegativeNumber(result.maxScore ?? result.maximumScore);
+  if (score !== null && maximumScore > 0 && score <= maximumScore) {
+    return (score / maximumScore) * 100;
+  }
+
+  if (statistics) {
+    return (statistics.correctAnswers / statistics.totalQuestions) * 100;
+  }
+
+  const scorePercentage = nonNegativeNumber(result.scorePercentage);
+  if (scorePercentage !== null && scorePercentage <= 100) {
+    return scorePercentage > 0 && scorePercentage < 1
+      ? scorePercentage * 100
+      : scorePercentage;
+  }
+  return null;
+}
+
 function classifyTopic(accuracy) {
   if (accuracy < 60) return 'weak';
   if (accuracy < 80) return 'moderate';
@@ -35,6 +95,8 @@ export function createSourceFingerprint(subjects, quizResults) {
       correctAnswers: result.correctAnswers || 0,
       incorrectAnswers: result.incorrectAnswers ?? null,
       scorePercentage: result.scorePercentage ?? null,
+      score: result.score ?? null,
+      maxScore: result.maxScore ?? result.maximumScore ?? null,
       answers: (result.answers || []).map((answer) => ({
         topicId: answer.topicId ? String(answer.topicId) : null,
         isCorrect: answer.isCorrect,
@@ -47,23 +109,29 @@ export function createSourceFingerprint(subjects, quizResults) {
 export function analyzeQuizPerformance(subjects, quizResults) {
   const subjectById = new Map(subjects.map((subject) => [String(subject._id), subject]));
   const topicStats = new Map();
+  const completedResults = quizResults.filter((result) => (
+    result &&
+    result.completed !== false &&
+    !['incomplete', 'in-progress', 'paused', 'running'].includes(result.status)
+  ));
   let totalQuestions = 0;
   let correctAnswers = 0;
   let incorrectAnswers = 0;
   let scoreTotal = 0;
+  let scoredAttempts = 0;
 
-  for (const result of quizResults) {
-    totalQuestions += result.totalQuestions || 0;
-    correctAnswers += result.correctAnswers || 0;
-    incorrectAnswers += result.incorrectAnswers ?? Math.max(
-      0,
-      (result.totalQuestions || 0) - (result.correctAnswers || 0)
-    );
-    scoreTotal += Number.isFinite(result.scorePercentage)
-      ? result.scorePercentage
-      : result.totalQuestions
-        ? Math.round((result.correctAnswers / result.totalQuestions) * 100)
-        : 0;
+  for (const result of completedResults) {
+    const statistics = getAttemptStatistics(result);
+    if (statistics) {
+      totalQuestions += statistics.totalQuestions;
+      correctAnswers += statistics.correctAnswers;
+      incorrectAnswers += statistics.incorrectAnswers;
+    }
+    const attemptPercentage = getAttemptPercentage(result, statistics);
+    if (attemptPercentage !== null) {
+      scoreTotal += attemptPercentage;
+      scoredAttempts += 1;
+    }
 
     const subject = subjectById.get(String(result.subjectId));
     if (!subject) continue;
@@ -121,11 +189,11 @@ export function analyzeQuizPerformance(subjects, quizResults) {
   const assessedTopics = topics.filter((topic) => topic.totalQuestions > 0);
 
   return {
-    totalAttempts: quizResults.length,
+    totalAttempts: completedResults.length,
     totalQuestions,
     correctAnswers,
     incorrectAnswers,
-    averageScore: quizResults.length ? Math.round(scoreTotal / quizResults.length) : null,
+    averageScore: scoredAttempts ? Math.round(scoreTotal / scoredAttempts) : null,
     overallAccuracy: totalQuestions ? Math.round((correctAnswers / totalQuestions) * 100) : null,
     topics,
     assessedTopics,

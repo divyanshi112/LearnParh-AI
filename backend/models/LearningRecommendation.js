@@ -52,6 +52,7 @@ const learningRecommendationSchema = new mongoose.Schema(
       totalQuestions: { type: Number, required: true, min: 0 },
       correctAnswers: { type: Number, required: true, min: 0 },
       incorrectAnswers: { type: Number, required: true, min: 0 },
+      averageScore: { type: Number, min: 0, max: 100, default: null },
       overallAccuracy: { type: Number, min: 0, max: 100, default: null },
       topics: { type: [topicPerformanceSchema], default: [] },
     },

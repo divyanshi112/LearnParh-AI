@@ -76,6 +76,11 @@ export default function StudyPlan() {
     loadData();
   }, [loadData]);
 
+  useEffect(() => {
+    if (loading || !window.location.hash) return;
+    document.getElementById(window.location.hash.slice(1))?.scrollIntoView({ block: 'center' });
+  }, [loading, subjects, targets]);
+
   const topicNames = useMemo(() => {
     const names = new Map();
     subjects.forEach((subject) => {
@@ -278,7 +283,7 @@ export default function StudyPlan() {
               ) : (
                 <div className="grid gap-4 xl:grid-cols-2">
                   {subjects.map((subject) => (
-                    <article key={subject._id} className="rounded-xl border border-slate-800 bg-dark-900 p-5">
+                    <article id={`subject-${subject._id}`} key={subject._id} className="rounded-xl border border-slate-800 bg-dark-900 p-5">
                       <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0">
                           <h4 className="break-words text-base font-semibold text-white">{subject.name}</h4>
@@ -325,7 +330,7 @@ export default function StudyPlan() {
                         ) : (
                           <ul className="space-y-2">
                             {subject.topics.map((topic) => (
-                              <li key={topic._id} className="flex flex-wrap items-center gap-2 rounded-xl bg-dark-800/70 px-3 py-2">
+                              <li id={`topic-${topic._id}`} key={topic._id} className="flex flex-wrap items-center gap-2 rounded-xl bg-dark-800/70 px-3 py-2">
                                 <span className="min-w-0 flex-1 break-words text-sm text-slate-200">{topic.name}</span>
                                 <select
                                   value={topic.status}
@@ -408,7 +413,7 @@ export default function StudyPlan() {
               ) : (
                 <div className="space-y-3">
                   {targets.map((target) => (
-                    <article key={target._id} className={`flex flex-col gap-3 rounded-xl border bg-dark-900 p-4 sm:flex-row sm:items-center ${target.completed ? 'border-emerald-500/20' : 'border-slate-800'}`}>
+                    <article id={`target-${target._id}`} key={target._id} className={`flex flex-col gap-3 rounded-xl border bg-dark-900 p-4 sm:flex-row sm:items-center ${target.completed ? 'border-emerald-500/20' : 'border-slate-800'}`}>
                       <button
                         type="button"
                         onClick={() => toggleTarget(target)}

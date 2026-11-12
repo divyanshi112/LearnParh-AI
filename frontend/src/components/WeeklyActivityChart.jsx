@@ -3,12 +3,13 @@ import {
   ResponsiveContainer,
   AreaChart,
   Area,
+  ComposedChart,
   XAxis,
   YAxis,
   CartesianGrid,
   Tooltip,
-  BarChart,
-  Bar
+  Bar,
+  Line,
 } from 'recharts';
 // Custom Dark Mode Tooltip
 const formatHours = (hours) => (
@@ -27,7 +28,7 @@ function CustomTooltip({ active, payload, label }) {
         <div className="space-y-1">
           <div className="flex items-center justify-between text-brand-blue-light space-x-3">
             <span>Hours Studied:</span>
-            <span className="font-bold font-mono text-white">{formatHours(data.hours)} hrs</span>
+            <span className="font-bold font-mono text-white">{Number(data.hours || 0).toFixed(2)} hrs</span>
           </div>
           <div className="flex items-center justify-between text-slate-400 space-x-3">
             <span>Daily Target:</span>
@@ -37,7 +38,7 @@ function CustomTooltip({ active, payload, label }) {
           </div>
           <div className="flex items-center justify-between text-slate-300 space-x-3 pt-1 border-t border-slate-800">
             <span>Quizzes Solved:</span>
-            <span className="font-bold font-mono text-white">{data.quizzes}</span>
+            <span className="font-bold font-mono text-white">{data.quizzes ?? 0}</span>
           </div>
         </div>
       </div>
@@ -59,7 +60,8 @@ export default function WeeklyActivityChart({ data = [] }) {
   const elapsedDays = data.filter((entry) => entry.date <= today).length;
   const avgDailyHours = elapsedDays ? totalWeeklyHours / elapsedDays : 0;
   const dailyTarget = data[0]?.target;
-  const hasActivity = data.some((entry) => entry.hours > 0 || entry.quizzes > 0);
+  const hasActivity = data.some((entry) => (entry.sessions || 0) > 0 || entry.hours > 0);
+  const hasDailyTarget = data.some((entry) => entry.target > 0);
 
   return (
     <div className="rounded-xl border border-slate-800 bg-dark-900 p-5 sm:p-6">
@@ -86,7 +88,9 @@ export default function WeeklyActivityChart({ data = [] }) {
         <div className="flex items-center space-x-2">
           <div className="flex items-center rounded-lg bg-dark-850 p-1 border border-slate-800 text-xs">
             <button
+              type="button"
               onClick={() => setChartView('area')}
+              aria-pressed={chartView === 'area'}
               className={`px-3 py-1 rounded-lg font-medium transition-all ${
                 chartView === 'area'
                   ? 'bg-dark-700 text-white'
@@ -96,7 +100,9 @@ export default function WeeklyActivityChart({ data = [] }) {
               Curve
             </button>
             <button
+              type="button"
               onClick={() => setChartView('bar')}
+              aria-pressed={chartView === 'bar'}
               className={`px-3 py-1 rounded-lg font-medium transition-all ${
                 chartView === 'bar'
                   ? 'bg-dark-700 text-white'
@@ -122,10 +128,6 @@ export default function WeeklyActivityChart({ data = [] }) {
                 <linearGradient id="purpleGradient" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%" stopColor="#6095D5" stopOpacity={0.24} />
                   <stop offset="95%" stopColor="#6095D5" stopOpacity={0.02} />
-                </linearGradient>
-                <linearGradient id="blueGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#A0A5AE" stopOpacity={0.12} />
-                  <stop offset="95%" stopColor="#A0A5AE" stopOpacity={0.01} />
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" stroke="#343941" vertical={false} />
@@ -153,21 +155,20 @@ export default function WeeklyActivityChart({ data = [] }) {
                 fillOpacity={1}
                 fill="url(#purpleGradient)"
               />
-              {data.some((entry) => entry.target > 0) && (
-                <Area
+              {hasDailyTarget && (
+                <Line
                   type="monotone"
                   dataKey="target"
                   name="Daily Study Goal"
                   stroke="#A0A5AE"
                   strokeWidth={1.5}
                   strokeDasharray="4 4"
-                  fillOpacity={1}
-                  fill="url(#blueGradient)"
+                  dot={false}
                 />
               )}
             </AreaChart>
           ) : (
-            <BarChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+            <ComposedChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#343941" vertical={false} />
               <XAxis
                 dataKey="day"
@@ -190,7 +191,18 @@ export default function WeeklyActivityChart({ data = [] }) {
                 radius={[4, 4, 0, 0]}
                 name="Hours Studied"
               />
-            </BarChart>
+              {hasDailyTarget && (
+                <Line
+                  type="monotone"
+                  dataKey="target"
+                  name="Daily Study Goal"
+                  stroke="#A0A5AE"
+                  strokeWidth={1.5}
+                  strokeDasharray="4 4"
+                  dot={false}
+                />
+              )}
+            </ComposedChart>
           )}
         </ResponsiveContainer>
       </div>
@@ -202,7 +214,7 @@ export default function WeeklyActivityChart({ data = [] }) {
             <span className="w-2.5 h-2.5 rounded-full bg-brand-blue"></span>
             <span>Study Hours Logged</span>
           </div>
-          {data.some((entry) => entry.target > 0) && <div className="flex items-center space-x-2">
+          {hasDailyTarget && <div className="flex items-center space-x-2">
             <span className="w-2.5 h-2.5 rounded-full bg-slate-400"></span>
             <span>Daily Study Goal</span>
           </div>}

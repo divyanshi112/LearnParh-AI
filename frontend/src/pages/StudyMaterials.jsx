@@ -78,6 +78,11 @@ export default function StudyMaterials() {
     loadData();
   }, [loadData]);
 
+  useEffect(() => {
+    if (loading || !window.location.hash) return;
+    document.getElementById(window.location.hash.slice(1))?.scrollIntoView({ block: 'center' });
+  }, [loading, documents]);
+
   const chooseFile = (event) => {
     const file = event.target.files?.[0] || null;
     setError('');
@@ -289,7 +294,7 @@ export default function StudyMaterials() {
               {documents.map((document) => {
                 const id = String(document._id);
                 return (
-                  <article key={id} className="flex flex-col gap-3 rounded-lg border border-slate-800 bg-dark-850 p-3 sm:flex-row sm:items-center sm:justify-between sm:p-4">
+                  <article id={`material-${id}`} key={id} className="flex flex-col gap-3 rounded-lg border border-slate-800 bg-dark-850 p-3 sm:flex-row sm:items-center sm:justify-between sm:p-4">
                     <div className="flex min-w-0 items-start gap-3">
                       <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-slate-700 bg-dark-800 text-rose-300">
                         <FileText className="h-4 w-4" />

@@ -1,7 +1,10 @@
-import React from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import DashboardLayout from '../components/DashboardLayout';
-import { TrendingUp, Target, Award, Calendar, BarChart2 } from 'lucide-react';
+import { AlertCircle, LoaderCircle } from 'lucide-react';
 import WeeklyActivityChart from '../components/WeeklyActivityChart';
+import { useAuth } from '../contexts/AuthContext.jsx';
+import { getDashboardData } from '../services/dashboardService.js';
 
 const skillsMastery = [
   { name: 'Algorithm Complexity Analysis', level: 94, category: 'Algorithms' },
@@ -12,6 +15,37 @@ const skillsMastery = [
 ];
 
 export default function Progress() {
+  const navigate = useNavigate();
+  const { signOut } = useAuth();
+  const [weeklyActivity, setWeeklyActivity] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  const loadActivity = useCallback(async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const dashboard = await getDashboardData();
+      if (!Array.isArray(dashboard.weeklyActivity)) {
+        throw new Error('The server returned incomplete weekly study activity.');
+      }
+      setWeeklyActivity(dashboard.weeklyActivity);
+    } catch (requestError) {
+      if (requestError.status === 401) {
+        signOut();
+        navigate('/login', { replace: true });
+        return;
+      }
+      setError(requestError.message || 'Could not load your weekly study activity.');
+    } finally {
+      setLoading(false);
+    }
+  }, [navigate, signOut]);
+
+  useEffect(() => {
+    loadActivity();
+  }, [loadActivity]);
+
   return (
     <DashboardLayout pageTitle="My Progress">
       <div className="space-y-6">
@@ -24,7 +58,26 @@ export default function Progress() {
         </div>
 
         {/* Weekly Activity Detailed Chart */}
-        <WeeklyActivityChart />
+        {loading ? (
+          <div className="flex min-h-72 items-center justify-center rounded-xl border border-slate-800 bg-dark-900 text-sm text-slate-400" role="status">
+            <LoaderCircle className="mr-3 h-5 w-5 animate-spin" />
+            Loading your weekly study activity...
+          </div>
+        ) : error ? (
+          <div className="rounded-xl border border-rose-500/30 bg-dark-900 p-5 text-sm text-rose-200" role="alert">
+            <div className="flex items-start gap-3">
+              <AlertCircle className="mt-0.5 h-5 w-5 shrink-0" />
+              <div>
+                <p>{error}</p>
+                <button type="button" onClick={loadActivity} className="mt-3 font-medium underline">
+                  Try again
+                </button>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <WeeklyActivityChart data={weeklyActivity} />
+        )}
 
         {/* Skill Mastery Breakdown */}
         <div className="p-6 rounded-xl bg-dark-900 border border-slate-800">
